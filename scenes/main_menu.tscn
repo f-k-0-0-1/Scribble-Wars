@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://cf0t5shgaf0hb"]
+
+[ext_resource type="Script" uid="uid://cdd3intieraih" path="res://scripts/main_menu.gd" id="1_bqqt6"]
+[ext_resource type="Texture2D" uid="uid://dcn4k0dwch5ph" path="res://assets/PNG/Hand-Drawn Village Battlefield Map.png" id="1_ekxnf"]
+[ext_resource type="Texture2D" uid="uid://byqhu10a3mm2l" path="res://assets/PNG/Scribble Wars Comic Logo.png" id="2_bqqt6"]
+
+[node name="MainMenu" type="Control" unique_id=529188696]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_bqqt6")
+
+[node name="BG" type="TextureRect" parent="." unique_id=607363766]
+modulate = Color(0.8104176, 0.81041765, 0.81041765, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_ekxnf")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=649449427]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -225.0
+offset_right = 225.0
+offset_bottom = 200.0
+grow_horizontal = 2
+texture = ExtResource("2_bqqt6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=291027803]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -25.0
+offset_right = 100.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Button" type="Button" parent="VBoxContainer" unique_id=479944426]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "START"
+
+[node name="Button2" type="Button" parent="VBoxContainer" unique_id=1716628867]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 25
+text = "QUIT"
