@@ -1,72 +1,82 @@
 
 extends CanvasLayer
 
-@export var joystick_radius: float = 55.0
-@export var deadzone: float = 0.2
+signal joystick_moved(direction: Vector2)
 
-@onready var touch_zone: Control = $LeftTouchZone
+@export var max_distance: float = 50.0
+
+@onready var left_touch_zone: Control = $LeftTouchZone
 @onready var base: Control = $LeftTouchZone/Base
 @onready var tip: Control = $LeftTouchZone/Base/Tip
 
 var touch_index: int = -1
-var direction: Vector2 = Vector2.ZERO
-var tip_start_position: Vector2
+var joystick_dir: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
-	tip_start_position = tip.position
+	base.visible = false
+	tip.visible = false
+
+	left_touch_zone.mouse_filter = Control.MOUSE_FILTER_STOP
 
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		if event.pressed:
-			if touch_index == -1 and touch_zone.get_global_rect().has_point(event.position):
+			if touch_index == -1 and left_touch_zone.get_global_rect().has_point(event.position):
 				touch_index = event.index
-				_update_joystick(event.position)
+				base.visible = true
+				tip.visible = true
+				update_joystick(event.position)
 		elif event.index == touch_index:
-			_reset_joystick()
+			reset_joystick()
 
-	elif event is InputEventScreenDrag and event.index == touch_index:
-		_update_joystick(event.position)
+	elif event is InputEventScreenDrag:
+		if event.index == touch_index:
+			update_joystick(event.position)
 
+	elif event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				if touch_index == -1 and left_touch_zone.get_global_rect().has_point(event.position):
+					touch_index = 0
+					base.visible = true
+					tip.visible = true
+					update_joystick(event.position)
+			elif touch_index == 0:
+				reset_joystick()
 
-func _update_joystick(screen_position: Vector2) -> void:
-	var center_global := base.global_position + base.size / 2.0
-	var offset := screen_position - center_global
-
-	if offset.length() > joystick_radius:
-		offset = offset.normalized() * joystick_radius
-
-	tip.global_position = center_global + offset - tip.size / 2.0
-
-	direction = offset / joystick_radius
-	_apply_movement_actions()
-
-
-func _apply_movement_actions() -> void:
-	_set_action("left", direction.x < -deadzone)
-	_set_action("right", direction.x > deadzone)
-	_set_action("up", direction.y < -deadzone)
-	_set_action("down", direction.y > deadzone)
+	elif event is InputEventMouseMotion:
+		if touch_index == 0 and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			update_joystick(event.position)
 
 
-func _set_action(action_name: String, active: bool) -> void:
-	if active:
-		if not Input.is_action_pressed(action_name):
-			Input.action_press(action_name)
-	elif Input.is_action_pressed(action_name):
-		Input.action_release(action_name)
+func update_joystick(touch_pos: Vector2) -> void:
+	var base_center: Vector2 = base.global_position + base.size / 2.0
+	var diff: Vector2 = touch_pos - base_center
+
+	if max_distance <= 0.0:
+		return
+
+	diff = diff.limit_length(max_distance)
+
+	tip.global_position = (
+		base_center + diff - tip.size / 2.0
+	)
+
+	joystick_dir = diff / max_distance
+	joystick_moved.emit(joystick_dir)
 
 
-func _reset_joystick() -> void:
+func reset_joystick() -> void:
 	touch_index = -1
-	direction = Vector2.ZERO
-	tip.position = tip_start_position
+	joystick_dir = Vector2.ZERO
 
-	for action_name in [
-		"up",
-		"down",
-		"left",
-        "right"
-	]:
-		Input.action_release(action_name)
+	var base_center: Vector2 = base.global_position + base.size / 2.0
+
+	tip.global_position = base_center - tip.size / 2.0
+
+	base.visible = false
+	tip.visible = false
+
+	joystick_moved.emit(Vector2.ZERO)

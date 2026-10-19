@@ -1,0 +1,104 @@
+
+extends Node
+
+# Replace these paths with your actual audio file paths.
+const MUSIC_PATH: String = "res://audio/old city theme.ogg"
+const WALK_LEFT_PATH: String = "res://audio/sfx_step_grass_l.ogg"
+const WALK_RIGHT_PATH: String = "res://audio/sfx_step_grass_r.ogg"
+
+const MUSIC_VOLUME_DB: float = -10.0
+const FOOTSTEPS_VOLUME_DB: float = -15.0
+const FOOTSTEP_INTERVAL: float = 0.38
+
+var music_player: AudioStreamPlayer
+var walk_left: AudioStreamPlayer
+var walk_right: AudioStreamPlayer
+
+var footstep_timer: float = 0.0
+var left_foot_next: bool = true
+var was_moving: bool = false
+
+
+func _ready() -> void:
+	music_player = _create_player("MusicPlayer", MUSIC_VOLUME_DB)
+	walk_left = _create_player("WalkLeft", FOOTSTEPS_VOLUME_DB)
+	walk_right = _create_player("WalkRight", FOOTSTEPS_VOLUME_DB)
+
+	music_player.stream = _load_audio(MUSIC_PATH)
+	walk_left.stream = _load_audio(WALK_LEFT_PATH)
+	walk_right.stream = _load_audio(WALK_RIGHT_PATH)
+
+	if music_player.stream:
+		music_player.play()
+
+
+func _create_player(player_name: String, volume_db: float) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.name = player_name
+	player.volume_db = volume_db
+	add_child(player)
+	return player
+
+
+func _load_audio(path: String) -> AudioStream:
+	if not ResourceLoader.exists(path):
+		push_warning("Audio file not found: " + path)
+		return null
+
+	var audio := load(path) as AudioStream
+
+	if audio == null:
+		push_warning("Failed to load audio file: " + path)
+
+	return audio
+
+
+func update_footsteps(is_moving: bool, delta: float) -> void:
+	if not is_moving:
+		footstep_timer = 0.0
+		was_moving = false
+		return
+
+	if not was_moving:
+		footstep_timer = 0.0
+
+	was_moving = true
+	footstep_timer -= delta
+
+	if footstep_timer <= 0.0:
+		_play_footstep()
+		footstep_timer = FOOTSTEP_INTERVAL
+
+
+func _play_footstep() -> void:
+	var player: AudioStreamPlayer
+
+	if left_foot_next:
+		player = walk_left
+	else:
+		player = walk_right
+
+	if player.stream:
+		player.pitch_scale = randf_range(0.96, 1.04)
+		player.play()
+
+	left_foot_next = not left_foot_next
+
+
+func set_music_volume(value: float) -> void:
+	music_player.volume_db = linear_to_db(clampf(value, 0.0, 1.0))
+
+
+func set_footsteps_volume(value: float) -> void:
+	var volume := linear_to_db(clampf(value, 0.0, 1.0))
+	walk_left.volume_db = volume
+	walk_right.volume_db = volume
+
+
+func stop_music() -> void:
+	music_player.stop()
+
+
+func resume_music() -> void:
+	if music_player.stream and not music_player.playing:
+		music_player.play()
