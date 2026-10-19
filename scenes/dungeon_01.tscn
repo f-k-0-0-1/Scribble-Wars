@@ -18,6 +18,7 @@
 [ext_resource type="StyleBox" uid="uid://d2gf3jvuof77n" path="res://resources/button_style.tres" id="17_pmu6s"]
 [ext_resource type="PackedScene" uid="uid://c1b5aqvu54bbl" path="res://scenes/ArcherEnemy.tscn" id="18_8cfcp"]
 [ext_resource type="PackedScene" uid="uid://nywaye8q4pru" path="res://scenes/SpearEnemy.tscn" id="19_8cfcp"]
+[ext_resource type="PackedScene" uid="uid://d25f2alu73tty" path="res://scenes/DualAxeEnemy.tscn" id="20_t1vrp"]
 [ext_resource type="PackedScene" uid="uid://cwg4tmc7lc6xq" path="res://scenes/player.tscn" id="38_qj7dc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1rmps"]
@@ -346,6 +347,12 @@ _data = {
 }
 point_count = 22
 
+[sub_resource type="Curve2D" id="Curve2D_188jm"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 1089, -419, 0, 0, 0, 0, 1040, 49, 0, 0, 0, 0, 1151, -5, 0, 0, 0, 0, 1117, -249, 0, 0, 0, 0, 1254, -256)
+}
+point_count = 5
+
 [node name="Dungeon01" type="Node2D" unique_id=782093072]
 script = ExtResource("1_n6o8o")
 
@@ -416,5 +423,15 @@ rotation = -2.4567714
 rotation = 0.7853982
 scale = Vector2(0.5, 0.5)
 rotation_offset_degrees = 120.0
+
+[node name="DualAxeEnemyPath" type="Path2D" parent="NPC" unique_id=1700077891]
+curve = SubResource("Curve2D_188jm")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="NPC/DualAxeEnemyPath" unique_id=316931324]
+position = Vector2(1089, -419)
+rotation = 1.6751171
+
+[node name="DualAxeEnemy" parent="NPC/DualAxeEnemyPath/PathFollow2D" unique_id=1699474106 instance=ExtResource("20_t1vrp")]
+scale = Vector2(0.5, 0.5)
 
 [connection signal="pressed" from="HUD/BackButton" to="." method="_on_back_button_pressed"]

@@ -11,6 +11,7 @@ enum EnemyState {
 @export_group("Detection")
 @export var detection_radius: float = 250.0
 @export var lose_target_distance: float = 400.0
+@export_flags_2d_physics var line_of_sight_collision_mask: int = 0xFFFFFFFF
 
 @export_group("Movement")
 @export var patrol_speed: float = 45.0
@@ -140,14 +141,22 @@ func _physics_process(delta: float) -> void:
 
 	match state:
 		EnemyState.PATROL:
-			if distance_to_player <= detection_radius:
+			if (
+				distance_to_player <= detection_radius
+				and _has_line_of_sight(player)
+			):
 				_begin_chase()
 			else:
 				_update_patrol(delta)
 
 		EnemyState.CHASE:
 			if distance_to_player > lose_target_distance:
-				_return_to_patrol()
+				_lose_player()
+				return
+
+			# Stop chasing when a wall blocks the player's visibility.
+			if not _has_line_of_sight(player):
+				_lose_player()
 				return
 
 			if distance_to_player <= attack_range:
@@ -162,6 +171,14 @@ func _physics_process(delta: float) -> void:
 				_chase_player()
 
 		EnemyState.ATTACK:
+			# Cancel the attack if the player moves behind a wall.
+			if (
+				not is_instance_valid(player)
+				or not _has_line_of_sight(player)
+			):
+				_lose_player()
+				return
+
 			_maintain_attack_separation()
 
 		EnemyState.DEAD:
@@ -176,6 +193,48 @@ func _find_player_if_needed() -> void:
 
 	if candidate is Node2D:
 		player = candidate
+
+
+func _has_line_of_sight(target: Node2D) -> bool:
+	if not is_instance_valid(target):
+		return false
+
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position,
+		target.global_position,
+		line_of_sight_collision_mask
+	)
+
+	# Exclude this enemy's body so it cannot block its own ray.
+	query.exclude = [get_rid()]
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+
+	var result := get_world_2d().direct_space_state.intersect_ray(query)
+
+	# A clear ray must actually hit the player.
+	if result.is_empty():
+		return false
+
+	var collider = result.get("collider")
+
+	if not is_instance_valid(collider):
+		return false
+
+	if collider == target:
+		return true
+
+	# Also support a player whose collision body is a child of
+	# the node belonging to the "player" group.
+	if collider is Node and target.is_ancestor_of(collider):
+		return true
+
+	return false
+
+
+func _lose_player() -> void:
+	player = null
+	_return_to_patrol()
 
 
 func _update_patrol(delta: float) -> void:
@@ -237,6 +296,7 @@ func _begin_chase() -> void:
 
 	if is_instance_valid(patrol_follower):
 		var current_scene := get_tree().current_scene
+
 		if current_scene != null:
 			reparent(current_scene, true)
 
@@ -267,28 +327,31 @@ func _return_to_patrol() -> void:
 	velocity = Vector2.ZERO
 	spear_hitbox.set_deferred("monitoring", false)
 
-	if is_instance_valid(patrol_follower) and is_instance_valid(original_path):
-		if original_path.curve != null:
-			var local_position := original_path.to_local(
-				global_position
+	if (
+		is_instance_valid(patrol_follower)
+		and is_instance_valid(original_path)
+		and original_path.curve != null
+	):
+		var local_position := original_path.to_local(
+			global_position
+		)
+
+		patrol_follower.progress = (
+			original_path.curve.get_closest_offset(
+				local_position
 			)
+		)
 
-			patrol_follower.progress = (
-				original_path.curve.get_closest_offset(
-					local_position
-				)
-			)
+		reparent(patrol_follower, false)
+		position = Vector2.ZERO
+		rotation = 0.0
 
-			reparent(patrol_follower, false)
-			position = Vector2.ZERO
-			rotation = 0.0
+		var path_length := original_path.curve.get_baked_length()
 
-			var path_length := original_path.curve.get_baked_length()
-
-			if patrol_follower.progress >= path_length * 0.5:
-				patrol_direction = -1.0
-			else:
-				patrol_direction = 1.0
+		if patrol_follower.progress >= path_length * 0.5:
+			patrol_direction = -1.0
+		else:
+			patrol_direction = 1.0
 
 	_play_animation(idle_animation)
 	returning_to_patrol = false
@@ -356,6 +419,11 @@ func _start_attack() -> void:
 		_finish_attack_early()
 		return
 
+	if not is_instance_valid(player) or not _has_line_of_sight(player):
+		_finish_attack_early()
+		_lose_player()
+		return
+
 	_maintain_attack_separation()
 	spear_hitbox.set_deferred("monitoring", true)
 
@@ -365,12 +433,18 @@ func _start_attack() -> void:
 		_finish_attack_early()
 		return
 
-	# Check shields first so a blocking shield can prevent body damage.
-	for area in spear_hitbox.get_overlapping_areas():
-		_handle_shield_collision(area)
+	if not is_instance_valid(player) or not _has_line_of_sight(player):
+		_finish_attack_early()
+		_lose_player()
+		return
 
-	for body in spear_hitbox.get_overlapping_bodies():
-		_apply_spear_hit(body)
+	# Check shields first so an active block prevents body damage.
+	if spear_hitbox.monitoring:
+		for area in spear_hitbox.get_overlapping_areas():
+			_handle_shield_collision(area)
+
+		for body in spear_hitbox.get_overlapping_bodies():
+			_apply_spear_hit(body)
 
 	await get_tree().create_timer(attack_active_time).timeout
 
@@ -422,23 +496,27 @@ func _handle_shield_collision(area: Area2D) -> void:
 		return
 
 	var shield_owner: Node = area
+
 	while is_instance_valid(shield_owner) and shield_owner != player:
-		if _has_property(shield_owner, "blocking_active"):
+		if _has_property(shield_owner, &"blocking_active"):
 			if not bool(shield_owner.get("blocking_active")):
 				return
 
 			blocked_this_attack = true
-			attack_hit_targets.append(player)
+
+			if is_instance_valid(player):
+				attack_hit_targets.append(player)
+
 			_play_shield_block_sound()
 			return
 
 		shield_owner = shield_owner.get_parent()
 
-	# A shield hitbox without a blocking_active property is not
-	# automatically treated as a successful block.
 
-
-func _has_property(object: Object, property_name: StringName) -> bool:
+func _has_property(
+	object: Object,
+	property_name: StringName
+) -> bool:
 	for property_info in object.get_property_list():
 		if StringName(property_info["name"]) == property_name:
 			return true
@@ -452,7 +530,10 @@ func _play_shield_block_sound() -> void:
 
 	var audio_manager := get_node_or_null("/root/AudioManager")
 
-	if audio_manager != null and audio_manager.has_method("play_shield_impact"):
+	if (
+		audio_manager != null
+		and audio_manager.has_method("play_shield_impact")
+	):
 		audio_manager.call("play_shield_impact")
 
 
@@ -476,6 +557,10 @@ func _apply_spear_hit(body: Node2D) -> void:
 	if body in attack_hit_targets:
 		return
 
+	# Do not deal damage through walls.
+	if not _has_line_of_sight(body):
+		return
+
 	attack_hit_targets.append(body)
 
 	if body.has_method("take_damage"):
@@ -485,13 +570,15 @@ func _apply_spear_hit(body: Node2D) -> void:
 
 
 func _on_detection_body_entered(body: Node2D) -> void:
-	if body.is_in_group("player"):
+	if body.is_in_group("player") and _has_line_of_sight(body):
 		player = body
 
 
 func _on_detection_body_exited(body: Node2D) -> void:
-	if body == player and global_position.distance_to(body.global_position) > lose_target_distance:
-		player = null
+	if body == player:
+		# The physics process handles the chase distance and
+		# line-of-sight checks.
+		pass
 
 
 func _play_animation(animation_name: StringName) -> void:
