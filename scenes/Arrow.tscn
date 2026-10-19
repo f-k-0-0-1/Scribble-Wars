@@ -2,19 +2,25 @@
 
 [ext_resource type="Script" uid="uid://bbfqd1gvt7kd4" path="res://scripts/arrow.gd" id="1_3pw4r"]
 [ext_resource type="Texture2D" uid="uid://bjqb3xexjt5r4" path="res://assets/PNG/Double (128px)/Items/weapon_arrow.png" id="1_4yf74"]
+[ext_resource type="AudioStream" uid="uid://d26343ige4jp" path="res://audio/arrow_swoosh_sfx.ogg" id="3_qhgny"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rqk3n"]
-size = Vector2(5, 56)
+size = Vector2(5, 46)
 
 [node name="Arrow" type="Area2D" unique_id=58105602]
 script = ExtResource("1_3pw4r")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1572489303]
 rotation = 1.5707964
-scale = Vector2(0.7, 0.7)
+scale = Vector2(0.6, 0.6)
 texture = ExtResource("1_4yf74")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1291097178]
-position = Vector2(-1, -2.1855694e-08)
+position = Vector2(-1, -2.1855698e-08)
 rotation = 1.5707964
 shape = SubResource("RectangleShape2D_rqk3n")
+
+[node name="ArrowSwooshPlayer" type="AudioStreamPlayer2D" parent="." unique_id=2074690719]
+stream = ExtResource("3_qhgny")
+volume_db = -5.0
+max_distance = 400.0

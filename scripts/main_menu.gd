@@ -15,9 +15,10 @@ func _ready() -> void:
 func _on_play_pressed() -> void:
 	play_button.disabled = true
 	quit_button.disabled = true
-
+	AudioManager.play_button_click()
 	SceneManager.start_new_game()
 
 
 func _on_quit_pressed() -> void:
+	AudioManager.play_button_click()
 	get_tree().quit()

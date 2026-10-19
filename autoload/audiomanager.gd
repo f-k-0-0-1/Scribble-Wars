@@ -8,13 +8,15 @@ const WALK_RIGHT_PATH: String = "res://audio/sfx_step_grass_r.ogg"
 const SWORD_SLASH_PATH: String = "res://audio/swod_slash_sfx.ogg"
 const SHIELD_SLIDE_PATH: String = "res://audio/slide_sfx.ogg"
 const SHIELD_IMPACT_PATH: String = "res://audio/shield_impact_sfx.ogg"
+const BUTTON_CLICK_PATH: String = "res://audio/button_click.ogg"
 
 # Audio levels.
 const MUSIC_VOLUME_DB: float = -10.0
-const FOOTSTEPS_VOLUME_DB: float = -15.0
+const FOOTSTEPS_VOLUME_DB: float = -18.0
 const SWORD_SLASH_VOLUME_DB: float = -5.0
-const SHIELD_SLIDE_VOLUME_DB: float = -7.0
-const SHIELD_IMPACT_VOLUME_DB: float = -4.0
+const SHIELD_SLIDE_VOLUME_DB: float = -2.0
+const SHIELD_IMPACT_VOLUME_DB: float = -8.0
+const BUTTON_CLICK_VOLUME_DB: float = -5.0
 
 # Footstep timing.
 const FOOTSTEP_INTERVAL: float = 0.38
@@ -25,6 +27,7 @@ var walk_right: AudioStreamPlayer
 var sword_slash_player: AudioStreamPlayer
 var shield_slide_player: AudioStreamPlayer
 var shield_impact_player: AudioStreamPlayer
+var button_click_player: AudioStreamPlayer
 
 var footstep_timer: float = 0.0
 var left_foot_next: bool = true
@@ -51,12 +54,19 @@ func _ready() -> void:
 		SHIELD_IMPACT_VOLUME_DB
 	)
 
+	button_click_player = _create_player(
+		"ButtonClick",
+		BUTTON_CLICK_VOLUME_DB
+	)
+
+	# Load audio files.
 	music_player.stream = _load_audio(MUSIC_PATH)
 	walk_left.stream = _load_audio(WALK_LEFT_PATH)
 	walk_right.stream = _load_audio(WALK_RIGHT_PATH)
 	sword_slash_player.stream = _load_audio(SWORD_SLASH_PATH)
 	shield_slide_player.stream = _load_audio(SHIELD_SLIDE_PATH)
 	shield_impact_player.stream = _load_audio(SHIELD_IMPACT_PATH)
+	button_click_player.stream = _load_audio(BUTTON_CLICK_PATH)
 
 	if music_player.stream:
 		music_player.play()
@@ -151,6 +161,17 @@ func play_shield_impact() -> void:
 	shield_impact_player.play()
 
 
+func play_button_click() -> void:
+	if button_click_player == null:
+		return
+
+	if button_click_player.stream == null:
+		return
+
+	button_click_player.pitch_scale = randf_range(0.98, 1.02)
+	button_click_player.play()
+
+
 func set_music_volume(value: float) -> void:
 	if music_player:
 		music_player.volume_db = linear_to_db(
@@ -185,6 +206,13 @@ func set_shield_slide_volume(value: float) -> void:
 func set_shield_impact_volume(value: float) -> void:
 	if shield_impact_player:
 		shield_impact_player.volume_db = linear_to_db(
+			clampf(value, 0.0, 1.0)
+		)
+
+
+func set_button_click_volume(value: float) -> void:
+	if button_click_player:
+		button_click_player.volume_db = linear_to_db(
 			clampf(value, 0.0, 1.0)
 		)
 

@@ -1,0 +1,237 @@
+[gd_scene format=3 uid="uid://nywaye8q4pru"]
+
+[ext_resource type="Texture2D" uid="uid://bmxfusnmydlaq" path="res://assets/PNG/Double (128px)/Characters/purple_character.png" id="1_7b1sg"]
+[ext_resource type="Script" uid="uid://byq73bk1xsxd3" path="res://scripts/spear_enemy.gd" id="1_vngla"]
+[ext_resource type="Texture2D" uid="uid://cr37tgwam4vo3" path="res://assets/PNG/Double (128px)/Items/weapon_spear.png" id="2_atq5r"]
+[ext_resource type="Texture2D" uid="uid://bpl5ei2ww3rn8" path="res://assets/PNG/Double (128px)/Characters/purple_hand.png" id="2_ck8ct"]
+[ext_resource type="AudioStream" uid="uid://t333uk7fkqu1" path="res://audio/spear_thrust_sfx.ogg" id="4_md6q8"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_md6q8"]
+radius = 40.012497
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_atq5r"]
+height = 114.171814
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vngla"]
+radius = 12.369317
+
+[sub_resource type="Animation" id="Animation_atq5r"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WeaponPivot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-0.08726646]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("WeaponPivot/SpearHitbox:monitoring")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("BodySprite:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_md6q8"]
+resource_name = "attack"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WeaponPivot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.19999999, 0.3, 0.36, 0.46, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-8, 0), Vector2(-4, 0), Vector2(24, 0), Vector2(24, 0), Vector2(-21.999998, -5), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.19999999, 0.3, 0.45999998, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.08726646, 0.0, 0.0, -0.05235988, 0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("WeaponPivot/SpearHitbox:monitoring")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.19999999, 0.3, 0.36, 0.37, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [false, false, true, true, false, false]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("BodySprite:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.17, 0.24999999, 0.33, 0.41999996, 0.47999996, 0.56, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-1, 0), Vector2(-3, 1), Vector2(1, 0), Vector2(3, -1), Vector2(4, -1), Vector2(4, -1), Vector2(2, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_vngla"]
+resource_name = "idle"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -1), Vector2(0, -2), Vector2(0, -1), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.017453292, 0.0, 0.017453292, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_2riom"]
+resource_name = "move"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.3, 0.44999996, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -2), Vector2(0, 0), Vector2(0, -2), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("WeaponPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.3, 0.44999996, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, 0.06981317, 0.0, -0.06981317, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_vngla"]
+_data = {
+&"RESET": SubResource("Animation_atq5r"),
+&"attack": SubResource("Animation_md6q8"),
+&"idle": SubResource("Animation_vngla"),
+&"move": SubResource("Animation_2riom")
+}
+
+[node name="SpearEnemy" type="CharacterBody2D" unique_id=1026051208]
+script = ExtResource("1_vngla")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=231410180]
+shape = SubResource("CircleShape2D_md6q8")
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=1714549485]
+texture = ExtResource("1_7b1sg")
+
+[node name="WeaponPivot" type="Node2D" parent="." unique_id=1607709409]
+rotation = -0.08726646
+
+[node name="SpearSprite" type="Sprite2D" parent="WeaponPivot" unique_id=236368098]
+z_index = 1
+position = Vector2(-1, -61)
+rotation = -1.0471976
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("2_atq5r")
+
+[node name="LeftHandSprite" type="Sprite2D" parent="WeaponPivot" unique_id=573175838]
+z_index = 1
+position = Vector2(-1, -57)
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("2_ck8ct")
+
+[node name="RightHandSprite" type="Sprite2D" parent="WeaponPivot" unique_id=804118409]
+position = Vector2(44.999996, -36.000004)
+rotation = 1.5707964
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("2_ck8ct")
+
+[node name="SpearHitbox" type="Area2D" parent="WeaponPivot" unique_id=875593408]
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WeaponPivot/SpearHitbox" unique_id=1174641314]
+position = Vector2(4.0922394, -57.729042)
+rotation = -1.0471976
+shape = SubResource("CapsuleShape2D_atq5r")
+
+[node name="DetectionRange" type="Area2D" parent="." unique_id=241571858]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionRange" unique_id=90098601]
+shape = SubResource("CircleShape2D_vngla")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2122136884]
+libraries/ = SubResource("AnimationLibrary_vngla")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1903322105]
+stream = ExtResource("4_md6q8")
+volume_db = -5.0
+max_distance = 300.0

@@ -17,7 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://ga4bqhwsj0jc" path="res://scenes/joystick_controls.tscn" id="16_ilmsg"]
 [ext_resource type="StyleBox" uid="uid://d2gf3jvuof77n" path="res://resources/button_style.tres" id="17_pmu6s"]
 [ext_resource type="PackedScene" uid="uid://c1b5aqvu54bbl" path="res://scenes/ArcherEnemy.tscn" id="18_8cfcp"]
-[ext_resource type="PackedScene" uid="uid://x6ph7qjb4bwc" path="res://scenes/Arrow.tscn" id="19_t1vrp"]
+[ext_resource type="PackedScene" uid="uid://nywaye8q4pru" path="res://scenes/SpearEnemy.tscn" id="19_8cfcp"]
 [ext_resource type="PackedScene" uid="uid://cwg4tmc7lc6xq" path="res://scenes/player.tscn" id="38_qj7dc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1rmps"]
@@ -334,6 +334,18 @@ sources/10 = SubResource("TileSetAtlasSource_cmg7m")
 sources/0 = SubResource("TileSetAtlasSource_3sude")
 sources/11 = SubResource("TileSetAtlasSource_n6o8o")
 
+[sub_resource type="Curve2D" id="Curve2D_ro4vr"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 1341, 327, 0, 0, 0, 0, 1341, 504, 0, 0, 0, 0, 1012, 504, 0, 0, 0, 0, 1012, 326, 0, 0, 0, 0, 1293, 326)
+}
+point_count = 5
+
+[sub_resource type="Curve2D" id="Curve2D_t1vrp"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 1450, -240, 0, 0, 0, 0, 1390, -289, 0, 0, 0, 0, 1380, -309, 0, 0, 0, 0, 1381, -348, 0, 0, 0, 0, 1394, -374, 0, 0, 0, 0, 1432, -392, 0, 0, 0, 0, 1497, -393, 0, 0, 0, 0, 1540, -386, 0, 0, 0, 0, 1578, -374, 0, 0, 0, 0, 1636, -341, 0, 0, 0, 0, 1651, -305, 0, 0, 0, 0, 1657, -206, 0, 0, 0, 0, 1655, -134, 0, 0, 0, 0, 1629, -107, 0, 0, 0, 0, 1595, -94, 0, 0, 0, 0, 1559, -92, 0, 0, 0, 0, 1493, -91, 0, 0, 0, 0, 1453.2133, -94.13455, 0, 0, 0, 0, 1427, -101, 0, 0, 0, 0, 1406, -134, 0, 0, 0, 0, 1412, -161, 0, 0, 0, 0, 1436, -185)
+}
+point_count = 22
+
 [node name="Dungeon01" type="Node2D" unique_id=782093072]
 script = ExtResource("1_n6o8o")
 
@@ -383,9 +395,26 @@ text = "BACK
 
 [node name="NPC" type="Node" parent="." unique_id=1023882215]
 
-[node name="ArcherEnemy" parent="NPC" unique_id=1024227479 instance=ExtResource("18_8cfcp")]
-position = Vector2(1261.2327, 428.63745)
-scale = Vector2(0.6, 0.6)
-arrow_scene = ExtResource("19_t1vrp")
+[node name="ArcherPath1" type="Path2D" parent="NPC" unique_id=1916203857]
+curve = SubResource("Curve2D_ro4vr")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="NPC/ArcherPath1" unique_id=415070764]
+position = Vector2(1341, 327)
+rotation = 1.5707964
+
+[node name="ArcherEnemy" parent="NPC/ArcherPath1/PathFollow2D" unique_id=1024227479 instance=ExtResource("18_8cfcp")]
+scale = Vector2(0.5, 0.5)
+
+[node name="SpearEnemyPath" type="Path2D" parent="NPC" unique_id=69653607]
+curve = SubResource("Curve2D_t1vrp")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="NPC/SpearEnemyPath" unique_id=1038438830]
+position = Vector2(1450, -240)
+rotation = -2.4567714
+
+[node name="SpearEnemy" parent="NPC/SpearEnemyPath/PathFollow2D" unique_id=1026051208 instance=ExtResource("19_8cfcp")]
+rotation = 0.7853982
+scale = Vector2(0.5, 0.5)
+rotation_offset_degrees = 120.0
 
 [connection signal="pressed" from="HUD/BackButton" to="." method="_on_back_button_pressed"]

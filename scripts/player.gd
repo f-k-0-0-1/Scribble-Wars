@@ -29,13 +29,15 @@ var joystick_node: Node
 
 
 func _ready() -> void:
+	add_to_group("player")
+
 	joystick_node = get_tree().get_first_node_in_group("joystick")
 
 	if joystick_node:
 		_connect_joystick_signals()
 	else:
 		push_warning(
-            "JoystickControl not found. Check the 'joystick' group."
+			"JoystickControl not found. Check the 'joystick' group."
 		)
 
 	if starting_right_hand_item:
@@ -69,7 +71,9 @@ func _connect_joystick_signals() -> void:
 				"sword_pressed", attack_callback
 			)
 	else:
-		push_warning("JoystickControl is missing sword_pressed.")
+		push_warning(
+			"JoystickControl is missing sword_pressed."
+		)
 
 	if joystick_node.has_signal("shield_pressed"):
 		if not joystick_node.is_connected(
@@ -98,7 +102,7 @@ func _physics_process(delta: float) -> void:
 		"left",
 		"right",
 		"up",
-        "down"
+		"down"
 	)
 
 	var direction := (
@@ -113,6 +117,7 @@ func _physics_process(delta: float) -> void:
 	if is_moving:
 		facing_direction = direction.normalized()
 
+	# Update the body animation without interrupting a sword attack.
 	if not _is_attacking():
 		if is_moving:
 			_play_animation("move")
@@ -121,11 +126,12 @@ func _physics_process(delta: float) -> void:
 
 	_update_hands(delta)
 
-	# Optional footsteps:
-	# AudioManager.update_footsteps(is_moving, delta)
+	# Keyboard attack on PC.
+	if Input.is_action_just_pressed("attack"):
+		attack()
 
 	# Keyboard blocking on PC.
-	# Mobile blocking is handled by ShieldButton signals.
+	# Mobile blocking is handled through ShieldButton signals.
 	if Input.is_action_just_pressed("block"):
 		start_block()
 
@@ -163,7 +169,7 @@ func equip_right_hand(scene: PackedScene) -> void:
 
 	if item == null:
 		push_error(
-            "Right-hand item must extend the Equipment class."
+			"Right-hand item must extend the Equipment class."
 		)
 		return
 
@@ -184,7 +190,7 @@ func equip_left_hand(scene: PackedScene) -> void:
 
 	if item == null:
 		push_error(
-            "Left-hand item must extend the Equipment class."
+			"Left-hand item must extend the Equipment class."
 		)
 		return
 
@@ -216,7 +222,8 @@ func start_block() -> void:
 
 	if left_hand_item:
 		left_hand_item.block()
-	if right_hand_pivot:
+	
+	if right_hand_item:
 		right_hand_item.block()
 
 
@@ -226,9 +233,11 @@ func stop_block() -> void:
 
 	is_blocking = false
 
+	# Restore only the left-hand equipment.
 	if left_hand_item:
 		left_hand_item.stop_action()
-	if right_hand_pivot:
+	
+	if right_hand_item:
 		right_hand_item.stop_action()
 
 

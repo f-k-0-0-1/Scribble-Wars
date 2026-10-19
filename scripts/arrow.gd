@@ -3,7 +3,7 @@ extends Area2D
 
 @export var speed: float = 450.0
 @export var damage: int = 10
-@export var lifetime: float = 3.0
+@export var lifetime: float = 10.0
 
 # Assumes the arrow artwork points right at zero rotation.
 @export var sprite_rotation_offset_degrees: float = 0.0
@@ -11,6 +11,10 @@ extends Area2D
 var direction: Vector2 = Vector2.RIGHT
 var shooter: Node2D
 var has_hit: bool = false
+
+@onready var arrow_swoosh_player: AudioStreamPlayer2D = (
+	$ArrowSwooshPlayer
+)
 
 
 func _ready() -> void:
@@ -41,6 +45,13 @@ func launch(
 		+ deg_to_rad(sprite_rotation_offset_degrees)
 	)
 
+	# Play the swoosh from the arrow's 2D world position.
+	if (
+		is_instance_valid(arrow_swoosh_player)
+		and arrow_swoosh_player.stream != null
+	):
+		arrow_swoosh_player.play()
+
 
 func _physics_process(delta: float) -> void:
 	if has_hit:
@@ -62,10 +73,12 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 
 	if area.is_in_group("shield_hitboxes"):
-		# The shield decides whether blocking is currently active.
-		# If blocking is inactive, this arrow continues travelling.
-		if area.get_parent().has_method("_on_shield_area_entered"):
-			area.get_parent()._on_shield_area_entered(self)
+		# Let the shield handle the collision and decide
+		# whether blocking is currently active.
+		var shield := area.get_parent()
+
+		if shield and shield.has_method("_on_shield_area_entered"):
+			shield._on_shield_area_entered(self)
 
 		return
 
@@ -89,4 +102,4 @@ func _on_body_entered(body: Node2D) -> void:
 	# Destroy the arrow when it hits a solid wall.
 	if body is StaticBody2D or body is TileMapLayer:
 		has_hit = true
-		queue_free()
+		#queue_free()

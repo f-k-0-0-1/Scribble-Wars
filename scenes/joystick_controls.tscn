@@ -11,6 +11,7 @@
 script = ExtResource("2_t6lej")
 
 [node name="LeftTouchZone" type="Control" parent="." unique_id=3140638]
+modulate = Color(1, 1, 1, 0.5882353)
 layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
