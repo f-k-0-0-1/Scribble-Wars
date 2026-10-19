@@ -17,6 +17,9 @@ var left_hand_item: Equipment
 var can_attack: bool = true
 var is_blocking: bool = false
 
+var joystick_node: Node
+
+
 @onready var body_pivot: Node2D = $BodyPivot
 @onready var animation_player: AnimationPlayer = $BodyPivot/AnimationPlayer
 @onready var left_hand_pivot: Node2D = $LeftHandPivot
@@ -26,13 +29,14 @@ var is_blocking: bool = false
 
 
 func _ready() -> void:
-	var joystick = get_tree().get_first_node_in_group("joystick")
+	joystick_node = get_tree().get_first_node_in_group("joystick")
 
-	if joystick:
-		if not joystick.joystick_moved.is_connected(_on_joystick_moved):
-			joystick.joystick_moved.connect(_on_joystick_moved)
+	if joystick_node:
+		_connect_joystick_signals()
 	else:
-		push_warning("Joystick node not found in the 'joystick' group.")
+		push_warning(
+            "JoystickControl not found. Check the 'joystick' group."
+		)
 
 	if starting_right_hand_item:
 		equip_right_hand(starting_right_hand_item)
@@ -43,16 +47,58 @@ func _ready() -> void:
 	_play_animation("idle")
 
 
+func _connect_joystick_signals() -> void:
+	var movement_callback := Callable(self, "_on_joystick_moved")
+	var attack_callback := Callable(self, "attack")
+	var block_callback := Callable(self, "start_block")
+	var unblock_callback := Callable(self, "stop_block")
+
+	if joystick_node.has_signal("joystick_moved"):
+		if not joystick_node.is_connected(
+			"joystick_moved", movement_callback
+		):
+			joystick_node.connect(
+				"joystick_moved", movement_callback
+			)
+
+	if joystick_node.has_signal("sword_pressed"):
+		if not joystick_node.is_connected(
+			"sword_pressed", attack_callback
+		):
+			joystick_node.connect(
+				"sword_pressed", attack_callback
+			)
+	else:
+		push_warning("JoystickControl is missing sword_pressed.")
+
+	if joystick_node.has_signal("shield_pressed"):
+		if not joystick_node.is_connected(
+			"shield_pressed", block_callback
+		):
+			joystick_node.connect(
+				"shield_pressed", block_callback
+			)
+
+	if joystick_node.has_signal("shield_released"):
+		if not joystick_node.is_connected(
+			"shield_released", unblock_callback
+		):
+			joystick_node.connect(
+				"shield_released", unblock_callback
+			)
+
+
 func _on_joystick_moved(direction: Vector2) -> void:
-	joystick_direction = direction
+	joystick_direction = direction.limit_length(1.0)
 
 
 func _physics_process(delta: float) -> void:
+	# Keyboard movement on PC and joystick movement on mobile.
 	var keyboard_direction := Input.get_vector(
 		"left",
 		"right",
 		"up",
-		"down"
+        "down"
 	)
 
 	var direction := (
@@ -67,7 +113,6 @@ func _physics_process(delta: float) -> void:
 	if is_moving:
 		facing_direction = direction.normalized()
 
-	# Keep the body animation from overriding an attack if needed.
 	if not _is_attacking():
 		if is_moving:
 			_play_animation("move")
@@ -76,13 +121,11 @@ func _physics_process(delta: float) -> void:
 
 	_update_hands(delta)
 
-	# Optional footsteps.
+	# Optional footsteps:
 	# AudioManager.update_footsteps(is_moving, delta)
 
-	# Keyboard combat input.
-	if Input.is_action_just_pressed("attack"):
-		attack()
-
+	# Keyboard blocking on PC.
+	# Mobile blocking is handled by ShieldButton signals.
 	if Input.is_action_just_pressed("block"):
 		start_block()
 
@@ -119,11 +162,14 @@ func equip_right_hand(scene: PackedScene) -> void:
 	var item := scene.instantiate() as Equipment
 
 	if item == null:
-		push_error("Right-hand item must extend the Equipment class.")
+		push_error(
+            "Right-hand item must extend the Equipment class."
+		)
 		return
 
 	right_socket.add_child(item)
 	right_hand_item = item
+	item.reset_pose()
 
 
 func equip_left_hand(scene: PackedScene) -> void:
@@ -137,11 +183,14 @@ func equip_left_hand(scene: PackedScene) -> void:
 	var item := scene.instantiate() as Equipment
 
 	if item == null:
-		push_error("Left-hand item must extend the Equipment class.")
+		push_error(
+            "Left-hand item must extend the Equipment class."
+		)
 		return
 
 	left_socket.add_child(item)
 	left_hand_item = item
+	item.reset_pose()
 
 
 func attack() -> void:
@@ -155,6 +204,7 @@ func attack() -> void:
 	right_hand_item.attack()
 
 	await get_tree().create_timer(attack_cooldown).timeout
+
 	can_attack = true
 
 
@@ -166,6 +216,8 @@ func start_block() -> void:
 
 	if left_hand_item:
 		left_hand_item.block()
+	if right_hand_pivot:
+		right_hand_item.block()
 
 
 func stop_block() -> void:
@@ -176,6 +228,8 @@ func stop_block() -> void:
 
 	if left_hand_item:
 		left_hand_item.stop_action()
+	if right_hand_pivot:
+		right_hand_item.stop_action()
 
 
 func stop_equipment_action() -> void:
@@ -190,8 +244,9 @@ func _is_attacking() -> bool:
 	if right_hand_item == null:
 		return false
 
-	var item_animation_player: AnimationPlayer = (
+	var item_animation_player := (
 		right_hand_item.get_node_or_null("AnimationPlayer")
+		as AnimationPlayer
 	)
 
 	return (

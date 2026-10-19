@@ -1,18 +1,27 @@
 
 extends Node
 
-# Replace these paths with your actual audio file paths.
+# Audio file paths.
 const MUSIC_PATH: String = "res://audio/old city theme.ogg"
 const WALK_LEFT_PATH: String = "res://audio/sfx_step_grass_l.ogg"
 const WALK_RIGHT_PATH: String = "res://audio/sfx_step_grass_r.ogg"
+const SWORD_SLASH_PATH: String = "res://audio/swod_slash_sfx.ogg"
+const SHIELD_SLIDE_PATH: String = "res://audio/slide_sfx.ogg"
 
+# Audio levels.
 const MUSIC_VOLUME_DB: float = -10.0
 const FOOTSTEPS_VOLUME_DB: float = -15.0
+const SWORD_SLASH_VOLUME_DB: float = -5.0
+const SHIELD_SLIDE_VOLUME_DB: float = -7.0
+
+# Footstep timing.
 const FOOTSTEP_INTERVAL: float = 0.38
 
 var music_player: AudioStreamPlayer
 var walk_left: AudioStreamPlayer
 var walk_right: AudioStreamPlayer
+var sword_slash_player: AudioStreamPlayer
+var shield_slide_player: AudioStreamPlayer
 
 var footstep_timer: float = 0.0
 var left_foot_next: bool = true
@@ -23,16 +32,29 @@ func _ready() -> void:
 	music_player = _create_player("MusicPlayer", MUSIC_VOLUME_DB)
 	walk_left = _create_player("WalkLeft", FOOTSTEPS_VOLUME_DB)
 	walk_right = _create_player("WalkRight", FOOTSTEPS_VOLUME_DB)
+	sword_slash_player = _create_player(
+		"SwordSlash",
+		SWORD_SLASH_VOLUME_DB
+	)
+	shield_slide_player = _create_player(
+		"ShieldSlide",
+		SHIELD_SLIDE_VOLUME_DB
+	)
 
 	music_player.stream = _load_audio(MUSIC_PATH)
 	walk_left.stream = _load_audio(WALK_LEFT_PATH)
 	walk_right.stream = _load_audio(WALK_RIGHT_PATH)
+	sword_slash_player.stream = _load_audio(SWORD_SLASH_PATH)
+	shield_slide_player.stream = _load_audio(SHIELD_SLIDE_PATH)
 
 	if music_player.stream:
 		music_player.play()
 
 
-func _create_player(player_name: String, volume_db: float) -> AudioStreamPlayer:
+func _create_player(
+	player_name: String,
+	volume_db: float
+) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.name = player_name
 	player.volume_db = volume_db
@@ -85,20 +107,58 @@ func _play_footstep() -> void:
 	left_foot_next = not left_foot_next
 
 
+func play_sword_slash() -> void:
+	if sword_slash_player == null or sword_slash_player.stream == null:
+		return
+
+	sword_slash_player.pitch_scale = randf_range(0.95, 1.05)
+	sword_slash_player.play()
+
+
+func play_shield_slide() -> void:
+	if shield_slide_player == null or shield_slide_player.stream == null:
+		return
+
+	shield_slide_player.pitch_scale = randf_range(0.97, 1.03)
+	shield_slide_player.play()
+
+
 func set_music_volume(value: float) -> void:
-	music_player.volume_db = linear_to_db(clampf(value, 0.0, 1.0))
+	if music_player:
+		music_player.volume_db = linear_to_db(
+			clampf(value, 0.0, 1.0)
+		)
 
 
 func set_footsteps_volume(value: float) -> void:
 	var volume := linear_to_db(clampf(value, 0.0, 1.0))
-	walk_left.volume_db = volume
-	walk_right.volume_db = volume
+
+	if walk_left:
+		walk_left.volume_db = volume
+
+	if walk_right:
+		walk_right.volume_db = volume
+
+
+func set_sword_slash_volume(value: float) -> void:
+	if sword_slash_player:
+		sword_slash_player.volume_db = linear_to_db(
+			clampf(value, 0.0, 1.0)
+		)
+
+
+func set_shield_slide_volume(value: float) -> void:
+	if shield_slide_player:
+		shield_slide_player.volume_db = linear_to_db(
+			clampf(value, 0.0, 1.0)
+		)
 
 
 func stop_music() -> void:
-	music_player.stop()
+	if music_player:
+		music_player.stop()
 
 
 func resume_music() -> void:
-	if music_player.stream and not music_player.playing:
+	if music_player and music_player.stream and not music_player.playing:
 		music_player.play()

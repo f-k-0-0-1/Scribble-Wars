@@ -28,6 +28,11 @@ func play_action(action: String) -> void:
 	if animation_player.has_animation(action):
 		animation_player.play(action)
 
+func play_slash_sound() -> void:
+	AudioManager.play_sword_slash()
+	
+func play_shield_slide_sound() -> void:
+	AudioManager.play_shield_slide()
 
 func attack() -> void:
 	play_action("attack")

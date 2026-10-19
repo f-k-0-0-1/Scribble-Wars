@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://b8yt3sffyacme" path="res://assets/PNG/Default (64px)/floor_wall_half.png" id="10_t1vrp"]
 [ext_resource type="Texture2D" uid="uid://cpfrngnctdwq1" path="res://assets/PNG/Default (64px)/floor_wall_secret.png" id="11_188jm"]
 [ext_resource type="PackedScene" uid="uid://ga4bqhwsj0jc" path="res://scenes/joystick_controls.tscn" id="16_ilmsg"]
+[ext_resource type="StyleBox" uid="uid://d2gf3jvuof77n" path="res://resources/button_style.tres" id="17_pmu6s"]
 [ext_resource type="PackedScene" uid="uid://cwg4tmc7lc6xq" path="res://scenes/player.tscn" id="38_qj7dc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1rmps"]
@@ -364,13 +365,17 @@ scale = Vector2(0.5, 0.5)
 [node name="HUD" type="CanvasLayer" parent="." unique_id=167810801]
 
 [node name="BackButton" type="Button" parent="HUD" unique_id=1370604437]
-modulate = Color(1, 1, 1, 0.72156864)
 custom_minimum_size = Vector2(90, 50)
 offset_left = 47.0
 offset_top = 29.0
 offset_right = 137.0
 offset_bottom = 79.0
+theme_override_colors/font_color = Color(0.21350393, 0.21350333, 0.21350345, 1)
 theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = ExtResource("17_pmu6s")
+theme_override_styles/pressed = ExtResource("17_pmu6s")
+theme_override_styles/hover = ExtResource("17_pmu6s")
+theme_override_styles/focus = ExtResource("17_pmu6s")
 text = "BACK
 "
 

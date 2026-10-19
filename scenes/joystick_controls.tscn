@@ -3,6 +3,9 @@
 [ext_resource type="Texture2D" uid="uid://l4goywyhnlaq" path="res://assets/VirtualJoystickPack/Joystick.png" id="1_fh201"]
 [ext_resource type="Script" uid="uid://bxqyemsphrvgb" path="res://scripts/virtual_joystick.gd" id="2_t6lej"]
 [ext_resource type="Texture2D" uid="uid://cvgcnj5ygjhdf" path="res://assets/VirtualJoystickPack/SmallHandleFilled.png" id="3_m4cqf"]
+[ext_resource type="Texture2D" uid="uid://1fklfqvhydk2" path="res://assets/PNG/Double (128px)/Items/weapon_sword.png" id="4_gxs1q"]
+[ext_resource type="Texture2D" uid="uid://cpgtlqk1ggkpa" path="res://assets/VirtualJoystickPack/JoystickSplitted.png" id="5_sk4lv"]
+[ext_resource type="Texture2D" uid="uid://bu0wd50l1ntl6" path="res://assets/PNG/Double (128px)/Items/shield_curved.png" id="5_t3rwg"]
 
 [node name="JoystickControl" type="CanvasLayer" unique_id=249377758 groups=["joystick"]]
 script = ExtResource("2_t6lej")
@@ -46,5 +49,73 @@ offset_bottom = 25.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_m4cqf")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SwordButton" type="TextureButton" parent="." unique_id=862944133]
+custom_maximum_size = Vector2(120, 120)
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -321.0
+offset_top = 112.0
+offset_right = -241.0
+offset_bottom = 192.0
+grow_horizontal = 0
+grow_vertical = 2
+texture_normal = ExtResource("4_gxs1q")
+stretch_mode = 5
+
+[node name="TextureRect" type="TextureRect" parent="SwordButton" unique_id=1787863045]
+custom_minimum_size = Vector2(130, 130)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_sk4lv")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShieldButton" type="TextureButton" parent="." unique_id=1863453821]
+custom_maximum_size = Vector2(120, 120)
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -241.0
+offset_top = -20.0
+offset_right = -121.0
+offset_bottom = 100.0
+grow_horizontal = 0
+grow_vertical = 2
+texture_normal = ExtResource("5_t3rwg")
+stretch_mode = 5
+
+[node name="TextureRect" type="TextureRect" parent="ShieldButton" unique_id=1336875691]
+custom_minimum_size = Vector2(130, 130)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -45.0
+offset_top = -45.0
+offset_right = 45.0
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_sk4lv")
 expand_mode = 1
 stretch_mode = 5
