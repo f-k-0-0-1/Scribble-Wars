@@ -3,10 +3,75 @@
 [ext_resource type="Script" uid="uid://osf2cse1y7n0" path="res://scripts/equipment.gd" id="1_0w85e"]
 [ext_resource type="Texture2D" uid="uid://bu0wd50l1ntl6" path="res://assets/PNG/Double (128px)/Items/shield_curved.png" id="2_0w85e"]
 
+[sub_resource type="Animation" id="Animation_0w85e"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ShieldPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("ShieldPivot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_1m7qv"]
+resource_name = "block"
+length = 0.18
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ShieldPivot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.059999995, 0.12, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -8), Vector2(0, -12), Vector2(0, -10)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("ShieldPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.059999995, 0.12, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.2617994, -0.08726646, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_sd8ib"]
+_data = {
+&"RESET": SubResource("Animation_0w85e"),
+&"block": SubResource("Animation_1m7qv")
+}
+
 [node name="Shield" type="Node2D" unique_id=1318979696]
 script = ExtResource("1_0w85e")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=325262882]
+[node name="ShieldPivot" type="Node2D" parent="." unique_id=130076719]
+
+[node name="Sprite2D" type="Sprite2D" parent="ShieldPivot" unique_id=325262882]
 texture = ExtResource("2_0w85e")
+offset = Vector2(0, -11)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=270657457]
+libraries/ = SubResource("AnimationLibrary_sd8ib")

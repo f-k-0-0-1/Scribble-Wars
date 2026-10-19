@@ -3,11 +3,53 @@
 [ext_resource type="Script" uid="uid://osf2cse1y7n0" path="res://scripts/equipment.gd" id="1_sh16x"]
 [ext_resource type="Texture2D" uid="uid://1fklfqvhydk2" path="res://assets/PNG/Double (128px)/Items/weapon_sword.png" id="2_sh16x"]
 
+[sub_resource type="Animation" id="Animation_sh16x"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GripPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_hmyes"]
+resource_name = "attack"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GripPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.08, 0.17, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.61086524, 0.9599311, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wpb7a"]
+_data = {
+&"RESET": SubResource("Animation_sh16x"),
+&"attack": SubResource("Animation_hmyes")
+}
+
 [node name="Sword" type="Node2D" unique_id=1251521299]
 script = ExtResource("1_sh16x")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1456419958]
-position = Vector2(0, -36)
+[node name="GripPivot" type="Node2D" parent="." unique_id=958539754]
+
+[node name="Sprite2D" type="Sprite2D" parent="GripPivot" unique_id=1456419958]
 texture = ExtResource("2_sh16x")
+offset = Vector2(0, -46)
+region_enabled = true
+region_rect = Rect2(37.573826, 17.986385, 51.61291, 91.373764)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=698787759]
+libraries/ = SubResource("AnimationLibrary_wpb7a")
