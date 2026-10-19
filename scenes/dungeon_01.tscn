@@ -16,6 +16,8 @@
 [ext_resource type="Texture2D" uid="uid://cpfrngnctdwq1" path="res://assets/PNG/Default (64px)/floor_wall_secret.png" id="11_188jm"]
 [ext_resource type="PackedScene" uid="uid://ga4bqhwsj0jc" path="res://scenes/joystick_controls.tscn" id="16_ilmsg"]
 [ext_resource type="StyleBox" uid="uid://d2gf3jvuof77n" path="res://resources/button_style.tres" id="17_pmu6s"]
+[ext_resource type="PackedScene" uid="uid://c1b5aqvu54bbl" path="res://scenes/ArcherEnemy.tscn" id="18_8cfcp"]
+[ext_resource type="PackedScene" uid="uid://x6ph7qjb4bwc" path="res://scenes/Arrow.tscn" id="19_t1vrp"]
 [ext_resource type="PackedScene" uid="uid://cwg4tmc7lc6xq" path="res://scenes/player.tscn" id="38_qj7dc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1rmps"]
@@ -378,5 +380,12 @@ theme_override_styles/hover = ExtResource("17_pmu6s")
 theme_override_styles/focus = ExtResource("17_pmu6s")
 text = "BACK
 "
+
+[node name="NPC" type="Node" parent="." unique_id=1023882215]
+
+[node name="ArcherEnemy" parent="NPC" unique_id=1024227479 instance=ExtResource("18_8cfcp")]
+position = Vector2(1261.2327, 428.63745)
+scale = Vector2(0.6, 0.6)
+arrow_scene = ExtResource("19_t1vrp")
 
 [connection signal="pressed" from="HUD/BackButton" to="." method="_on_back_button_pressed"]

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://x3jdbwqax88t"]
 
-[ext_resource type="Script" uid="uid://osf2cse1y7n0" path="res://scripts/equipment.gd" id="1_0w85e"]
+[ext_resource type="Script" uid="uid://ytyg4c7a4yto" path="res://scripts/shield.gd" id="1_0w85e"]
 [ext_resource type="Texture2D" uid="uid://bu0wd50l1ntl6" path="res://assets/PNG/Double (128px)/Items/shield_curved.png" id="2_0w85e"]
 
 [sub_resource type="Animation" id="Animation_0w85e"]
@@ -111,6 +111,12 @@ scale = Vector2(0.7, 0.7)
 [node name="Sprite2D" type="Sprite2D" parent="ShieldPivot" unique_id=325262882]
 texture = ExtResource("2_0w85e")
 offset = Vector2(0, -11)
+
+[node name="ShieldHitbox" type="Area2D" parent="ShieldPivot" unique_id=1897615165]
+scale = Vector2(1.4285713, 1.4285713)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="ShieldPivot/ShieldHitbox" unique_id=1330033492]
+polygon = PackedVector2Array(-55, 7, -41, -6, -28, -14, -19, -18, -10, -20, 11, -20, 23, -16, 31, -12, 43, -3, 58, 12, 30, -4, 20, -9, 10, -12, -13, -12, -23, -8, -30, -4)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=270657457]
 libraries/ = SubResource("AnimationLibrary_sd8ib")

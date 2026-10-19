@@ -3,8 +3,8 @@
 [ext_resource type="Texture2D" uid="uid://yrwob4oxis7u" path="res://assets/PNG/Double (128px)/Characters/green_character.png" id="1_3vyb7"]
 [ext_resource type="Script" uid="uid://b8jwtpcausknv" path="res://scripts/player.gd" id="1_g2els"]
 [ext_resource type="PackedScene" uid="uid://dkqf4axbpxx5n" path="res://scenes/Sword.tscn" id="2_qlg0r"]
-[ext_resource type="Texture2D" uid="uid://dxjcoj7dksag1" path="res://assets/PNG/Default (64px)/Characters/green_hand.png" id="3_qhqgy"]
 [ext_resource type="PackedScene" uid="uid://x3jdbwqax88t" path="res://scenes/Shield.tscn" id="3_tuyoq"]
+[ext_resource type="Texture2D" uid="uid://up4tskoogxub" path="res://assets/PNG/Double (128px)/Characters/green_hand.png" id="5_qlg0r"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_g2els"]
 radius = 38.0
@@ -264,7 +264,7 @@ _data = {
 &"move": SubResource("Animation_qlg0r")
 }
 
-[node name="Player" type="CharacterBody2D" unique_id=1406513582]
+[node name="Player" type="CharacterBody2D" unique_id=1406513582 groups=["player"]]
 script = ExtResource("1_g2els")
 starting_right_hand_item = ExtResource("2_qlg0r")
 starting_left_hand_item = ExtResource("3_tuyoq")
@@ -292,17 +292,20 @@ position = Vector2(-46, -50)
 
 [node name="LeftHandSprite" type="Sprite2D" parent="LeftHandPivot" unique_id=303944300]
 position = Vector2(-45, -33)
-texture = ExtResource("3_qhqgy")
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("5_qlg0r")
 
 [node name="RightHandPivot" type="Node2D" parent="." unique_id=1117392265]
 
 [node name="EquipmentSocket" type="Marker2D" parent="RightHandPivot" unique_id=182243133]
 position = Vector2(45, -37)
+rotation = -0.5235988
 
 [node name="RightHandSprite" type="Sprite2D" parent="RightHandPivot" unique_id=1703631851]
 position = Vector2(45, -33)
 rotation = 1.5707964
-texture = ExtResource("3_qhqgy")
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("5_qlg0r")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=1659187725]
 
