@@ -334,3 +334,6 @@ visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Combat/AttackHitbox" unique_id=331940773]
 shape = SubResource("CircleShape2D_smehm")
+
+[node name="AudioListener2D" type="AudioListener2D" parent="." unique_id=412519425]
+current = true

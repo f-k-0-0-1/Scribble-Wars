@@ -18,7 +18,8 @@
 [ext_resource type="StyleBox" uid="uid://d2gf3jvuof77n" path="res://resources/button_style.tres" id="17_pmu6s"]
 [ext_resource type="PackedScene" uid="uid://c1b5aqvu54bbl" path="res://scenes/ArcherEnemy.tscn" id="18_8cfcp"]
 [ext_resource type="PackedScene" uid="uid://nywaye8q4pru" path="res://scenes/SpearEnemy.tscn" id="19_8cfcp"]
-[ext_resource type="PackedScene" uid="uid://d25f2alu73tty" path="res://scenes/DualAxeEnemy.tscn" id="20_t1vrp"]
+[ext_resource type="PackedScene" uid="uid://dpbifnplekyjy" path="res://scenes/DualAxeEnemy.tscn" id="20_t1vrp"]
+[ext_resource type="PackedScene" uid="uid://bajwd11fsyg7y" path="res://scenes/GunnerEnemy.tscn" id="21_188jm"]
 [ext_resource type="PackedScene" uid="uid://cwg4tmc7lc6xq" path="res://scenes/player.tscn" id="38_qj7dc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1rmps"]
@@ -335,6 +336,32 @@ sources/10 = SubResource("TileSetAtlasSource_cmg7m")
 sources/0 = SubResource("TileSetAtlasSource_3sude")
 sources/11 = SubResource("TileSetAtlasSource_n6o8o")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ro4vr"]
+bg_color = Color(0.19607843, 0.19607843, 0.19607843, 0.47843137)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0, 0, 0, 0.67058825)
+border_blend = true
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+corner_detail = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_32xer"]
+bg_color = Color(0.21568628, 0.8509804, 0.54901963, 1)
+border_width_top = 2
+border_width_right = 6
+border_width_bottom = 2
+border_color = Color(0, 0.5058824, 0.3254902, 1)
+border_blend = true
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
 [sub_resource type="Curve2D" id="Curve2D_ro4vr"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 1341, 327, 0, 0, 0, 0, 1341, 504, 0, 0, 0, 0, 1012, 504, 0, 0, 0, 0, 1012, 326, 0, 0, 0, 0, 1293, 326)
@@ -352,6 +379,12 @@ _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 1089, -419, 0, 0, 0, 0, 1040, 49, 0, 0, 0, 0, 1151, -5, 0, 0, 0, 0, 1117, -249, 0, 0, 0, 0, 1254, -256)
 }
 point_count = 5
+
+[sub_resource type="Curve2D" id="Curve2D_32xer"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 484, 277, 0, 0, 0, 0, 692, 276, 0, 0, 0, 0, 694, 545, 0, 0, 0, 0, 487, 548, 0, 0, 0, 0, 485, 422, 0, 0, 0, 0, 950, 421)
+}
+point_count = 6
 
 [node name="Dungeon01" type="Node2D" unique_id=782093072]
 script = ExtResource("1_n6o8o")
@@ -400,6 +433,20 @@ theme_override_styles/focus = ExtResource("17_pmu6s")
 text = "BACK
 "
 
+[node name="HealthBar" type="ProgressBar" parent="HUD" unique_id=725789987]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -376.0
+offset_top = 30.0
+offset_right = -63.0
+offset_bottom = 62.0
+grow_horizontal = 0
+theme_override_styles/background = SubResource("StyleBoxFlat_ro4vr")
+theme_override_styles/fill = SubResource("StyleBoxFlat_32xer")
+value = 70.0
+show_percentage = false
+
 [node name="NPC" type="Node" parent="." unique_id=1023882215]
 
 [node name="ArcherPath1" type="Path2D" parent="NPC" unique_id=1916203857]
@@ -432,6 +479,16 @@ position = Vector2(1089, -419)
 rotation = 1.6751171
 
 [node name="DualAxeEnemy" parent="NPC/DualAxeEnemyPath/PathFollow2D" unique_id=1699474106 instance=ExtResource("20_t1vrp")]
+scale = Vector2(0.5, 0.5)
+
+[node name="DualAxeEnemyPath2" type="Path2D" parent="NPC" unique_id=1993920400]
+curve = SubResource("Curve2D_32xer")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="NPC/DualAxeEnemyPath2" unique_id=1221101492]
+position = Vector2(484, 277)
+rotation = -0.0048076552
+
+[node name="GunnerEnemy" parent="NPC/DualAxeEnemyPath2/PathFollow2D" unique_id=1421719316 instance=ExtResource("21_188jm")]
 scale = Vector2(0.5, 0.5)
 
 [connection signal="pressed" from="HUD/BackButton" to="." method="_on_back_button_pressed"]

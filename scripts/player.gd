@@ -42,6 +42,7 @@ var damage_tween: Tween
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_timer: float = 0.0
 
+signal health_changed(current_health: int, max_health: int)
 
 @onready var body_pivot: Node2D = $BodyPivot
 @onready var body_sprite: Sprite2D = $BodyPivot/BodySprite
@@ -57,7 +58,10 @@ var knockback_timer: float = 0.0
 func _ready() -> void:
 	add_to_group("player")
 
+	$AudioListener2D.make_current()
+
 	current_health = max_health
+	health_changed.emit(current_health, max_health)
 
 	_setup_damage_shader()
 
@@ -348,6 +352,7 @@ func take_damage(
 	var was_invulnerable := is_invulnerable
 
 	current_health = maxi(current_health - amount, 0)
+	health_changed.emit(current_health, max_health)
 
 	print(
 		"Player took ",
@@ -496,6 +501,7 @@ func heal(amount: int) -> void:
 		return
 
 	current_health = mini(current_health + amount, max_health)
+	health_changed.emit(current_health, max_health)
 
 	print(
 		"Player healed. Health: ",

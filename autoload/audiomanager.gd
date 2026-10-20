@@ -15,7 +15,7 @@ const MUSIC_VOLUME_DB: float = -10.0
 const FOOTSTEPS_VOLUME_DB: float = -18.0
 const SWORD_SLASH_VOLUME_DB: float = -5.0
 const SHIELD_SLIDE_VOLUME_DB: float = -2.0
-const SHIELD_IMPACT_VOLUME_DB: float = -8.0
+const SHIELD_IMPACT_VOLUME_DB: float = -15.0
 const BUTTON_CLICK_VOLUME_DB: float = -5.0
 
 # Footstep timing.

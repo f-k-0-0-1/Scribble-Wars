@@ -5,16 +5,20 @@ signal melee_attack_blocked(attacker: Node2D)
 @onready var shield_hitbox: Area2D = $ShieldPivot/ShieldHitbox
 
 var blocking_active: bool = false
-var _last_impact_time: float = -1.0
 
 
 func _ready() -> void:
 	super._ready()
+
 	shield_hitbox.add_to_group("shield_hitboxes")
 	shield_hitbox.monitoring = true
 
-	if not shield_hitbox.area_entered.is_connected(_on_shield_area_entered):
-		shield_hitbox.area_entered.connect(_on_shield_area_entered)
+	if not shield_hitbox.area_entered.is_connected(
+		_on_shield_area_entered
+	):
+		shield_hitbox.area_entered.connect(
+			_on_shield_area_entered
+		)
 
 
 func block() -> void:
@@ -38,10 +42,12 @@ func try_block_melee_attack(attacker: Node2D) -> bool:
 	# Only block attacks from the shield's forward-facing half.
 	# Assumes the shield's local +X direction points outward.
 	var to_attacker := attacker.global_position - global_position
+
 	if to_attacker.length_squared() < 0.001:
 		return false
 
 	var shield_forward := Vector2.RIGHT.rotated(global_rotation)
+
 	if shield_forward.dot(to_attacker.normalized()) < 0.0:
 		return false
 
