@@ -325,18 +325,27 @@ func _try_block_incoming_damage(attacker: Node2D = null) -> bool:
 	return true
 
 
-func take_damage(amount: int, attacker: Node2D = null) -> void:
+func take_damage(
+	amount: int,
+	attacker: Node2D = null,
+	bypass_invulnerability: bool = false,
+	apply_hit_knockback: bool = true
+) -> bool:
 	if is_dead or amount <= 0:
-		return
+		return false
 
-	# Resolve shield blocking here as a final safeguard. The enemy's body-hit
-	# callback can run before the shield Area2D overlap callback in the same
-	# physics frame, so damage must not depend on callback order.
+	# Always resolve the shield first. The Dual Axe spin may bypass normal
+	# invulnerability frames for its five timed hits, but it must never bypass
+	# a successful shield block.
 	if _try_block_incoming_damage(attacker):
-		return
+		return false
 
-	if is_invulnerable:
-		return
+	if is_invulnerable and not bypass_invulnerability:
+		return false
+
+	# Do not restart the invulnerability timer for each multi-hit spin tick.
+	# It begins on the first accepted hit, as it does for ordinary damage.
+	var was_invulnerable := is_invulnerable
 
 	current_health = maxi(current_health - amount, 0)
 
@@ -353,10 +362,15 @@ func take_damage(amount: int, attacker: Node2D = null) -> void:
 
 	if current_health <= 0:
 		_die()
-		return
+		return true
 
-	_apply_knockback(attacker)
-	_start_invulnerability()
+	if apply_hit_knockback:
+		_apply_knockback(attacker)
+
+	if not was_invulnerable:
+		_start_invulnerability()
+
+	return true
 
 
 func _apply_knockback(attacker: Node2D = null) -> void:

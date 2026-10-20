@@ -22,7 +22,7 @@ enum EnemyState {
 
 @export_group("Combat")
 @export var attack_range: float = 65.0
-@export var attack_damage: int = 15
+@export var attack_damage: int = 35
 @export var attack_cooldown: float = 1.2
 @export var attack_windup: float = 0.1
 @export var attack_active_time: float = 0.75
@@ -71,6 +71,7 @@ var attack_in_progress: bool = false
 var last_shield_impact_elapsed: float = -999.0
 var spin_hits_applied_to_player: int = 0
 var last_player_spin_hit_elapsed: float = -999.0
+var spin_knockback_applied_to_player: bool = false
 
 var attack_direction: Vector2 = Vector2.RIGHT
 var attack_thrust_velocity: float = 0.0
@@ -536,6 +537,7 @@ func _start_attack() -> void:
 	last_shield_impact_elapsed = -999.0
 	spin_hits_applied_to_player = 0
 	last_player_spin_hit_elapsed = -999.0
+	spin_knockback_applied_to_player = false
 	attack_thrust_velocity = 0.0
 	hitbox_activation_pending = false
 
@@ -833,14 +835,31 @@ func _apply_attack_damage(body: Node2D) -> void:
 	spin_hits_applied_to_player += 1
 	last_player_spin_hit_elapsed = attack_elapsed
 
-	# Count each timed hit opportunity even if the shield blocks it. This keeps
-	# the five-hit sequence consistent and lets Player.take_damage() apply the
-	# existing shield logic separately for every hit.
+	# Count each timed hit opportunity even if the shield blocks it. The spin
+	# explicitly bypasses the player's normal invulnerability frames so all five
+	# hits in this one attack can connect. Shield blocking is checked first by
+	# Player.take_damage(), so a successful block still prevents the damage.
+	# Apply player knockback only on the first successful hit of this spin; doing
+	# it on every tick would push the player out of the spin hitbox too quickly.
 	if body.has_method("take_damage"):
 		if hit_damage > 0:
-			body.take_damage(hit_damage, self)
+			var apply_player_knockback := not spin_knockback_applied_to_player
+			var damage_applied := bool(
+				body.call(
+					"take_damage",
+					hit_damage,
+					self,
+					true, # bypass_invulnerability for this multi-hit spin only
+					apply_player_knockback
+				)
+			)
+			if damage_applied and apply_player_knockback:
+				spin_knockback_applied_to_player = true
 	else:
-		push_warning("Player needs a take_damage(amount, attacker) method.")
+		push_warning(
+			"Player needs take_damage(amount, attacker, "
+			+ "bypass_invulnerability, apply_hit_knockback)."
+		)
 
 
 func _get_spin_hit_damage(hit_index: int, hit_count: int) -> int:
