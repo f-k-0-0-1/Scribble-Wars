@@ -12,12 +12,10 @@ var resting_scale: Vector2
 
 
 func _ready() -> void:
-	# Save the default local transform after the item is attached.
 	resting_position = position
 	resting_rotation = rotation
 	resting_scale = scale
 
-	# Ensure the equipment starts in its resting pose.
 	reset_pose()
 
 
@@ -28,11 +26,14 @@ func play_action(action: String) -> void:
 	if animation_player.has_animation(action):
 		animation_player.play(action)
 
+
 func play_slash_sound() -> void:
 	AudioManager.play_sword_slash()
-	
+
+
 func play_shield_slide_sound() -> void:
 	AudioManager.play_shield_slide()
+
 
 func attack() -> void:
 	play_action("attack")

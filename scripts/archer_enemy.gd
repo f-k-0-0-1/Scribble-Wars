@@ -21,6 +21,20 @@ extends CharacterBody2D
 @export var move_animation: StringName = &"move"
 @export var shoot_animation: StringName = &"shoot"
 
+@export_group("Health")
+@export var max_health: int = 100
+
+@export_group("Knockback")
+@export var knockback_force: float = 260.0
+@export var knockback_duration: float = 0.16
+@export var knockback_decay: float = 1400.0
+
+@export_group("Damage Visuals")
+@export var body_sprite_path: NodePath = ^"BodyPivot/BodySprite"
+@export var damage_flash_count: int = 3
+@export var damage_flash_duration: float = 0.3
+
+
 var player: Node2D
 var can_shoot: bool = true
 var player_in_range: bool = false
@@ -36,6 +50,13 @@ var patrol_active: bool = true
 var is_shooting: bool = false
 var current_movement_animation: StringName = &""
 
+var current_health: int
+var is_dead: bool = false
+var damage_tween: Tween
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_timer: float = 0.0
+
+
 @onready var bow_pivot: Node2D = $BowPivot
 @onready var arrow_spawn: Marker2D = $BowPivot/Marker2D
 @onready var bow_with_arrow: Sprite2D = $BowPivot/BowWithArrow
@@ -48,9 +69,17 @@ var current_movement_animation: StringName = &""
 @onready var detection_shape: CollisionShape2D = $DetectionRange/CollisionShape2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 
+@onready var body_sprite: Sprite2D = get_node_or_null(body_sprite_path)
+
 
 func _ready() -> void:
 	add_to_group("enemies")
+	add_to_group("enemy")
+
+	current_health = maxi(max_health, 1)
+	max_health = current_health
+
+	_setup_damage_shader()
 
 	patrol_follower = get_parent() as PathFollow2D
 	patrol_active = patrol_enabled
@@ -101,6 +130,22 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		return
+
+	# Knockback temporarily overrides AI movement and pauses patrol/chase.
+	if knockback_timer > 0.0:
+		knockback_timer = maxf(knockback_timer - delta, 0.0)
+		velocity = knockback_velocity
+		move_and_slide()
+		knockback_velocity = knockback_velocity.move_toward(
+			Vector2.ZERO,
+			knockback_decay * delta
+		)
+		if knockback_timer <= 0.0:
+			knockback_velocity = Vector2.ZERO
+		return
+
 	if not is_instance_valid(player):
 		player = null
 		player_in_range = false
@@ -128,13 +173,11 @@ func _physics_process(delta: float) -> void:
 		_update_patrol(delta)
 		_update_patrol_facing()
 
-	# Update idle/move animation unless shooting has priority.
 	_update_movement_animation(should_pause_patrol)
 
 	if not can_see_player:
 		return
 
-	# Aim the bow in world space, converted to local rotation.
 	var aim_direction: Vector2 = (
 		player.global_position - bow_pivot.global_position
 	)
@@ -220,6 +263,7 @@ func _update_patrol_facing() -> void:
 			0.0,
 			path_length
 		)
+
 		next_point = curve.sample_baked(next_distance)
 		local_direction = next_point - current_point
 
@@ -227,7 +271,10 @@ func _update_patrol_facing() -> void:
 		return
 
 	var world_current := path.to_global(current_point)
-	var world_next := path.to_global(current_point + local_direction)
+	var world_next := path.to_global(
+		current_point + local_direction
+	)
+
 	var world_direction := world_next - world_current
 
 	if world_direction.length_squared() < 0.001:
@@ -239,9 +286,10 @@ func _update_patrol_facing() -> void:
 	)
 
 
-func _update_movement_animation(should_pause_patrol: bool = false) -> void:
-	# Never interrupt the shooting animation.
-	if is_shooting:
+func _update_movement_animation(
+	should_pause_patrol: bool = false
+) -> void:
+	if is_dead or is_shooting:
 		return
 
 	var is_moving := (
@@ -318,6 +366,9 @@ func _find_existing_player() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
+	if is_dead:
+		return
+
 	if body.is_in_group("player"):
 		player = body
 		player_in_range = true
@@ -329,7 +380,7 @@ func _on_body_exited(body: Node2D) -> void:
 
 
 func shoot_arrow() -> void:
-	if not can_shoot or not player_in_range:
+	if is_dead or not can_shoot or not player_in_range:
 		return
 
 	if not is_instance_valid(player):
@@ -365,10 +416,10 @@ func shoot_arrow() -> void:
 	animation_player.play(shoot_animation)
 
 
-# Add this method to the shoot animation's Call Method Track
+# Call this from the shoot animation's method-call track
 # at the frame when the arrow should leave the bow.
 func _release_arrow() -> void:
-	if not shot_pending:
+	if is_dead or not shot_pending:
 		return
 
 	shot_pending = false
@@ -397,6 +448,8 @@ func _release_arrow() -> void:
 
 	current_scene.add_child(arrow)
 
+	# Pass this archer to the arrow so it can pass the attacker
+	# into player.take_damage(amount, attacker) on impact.
 	arrow.launch(
 		arrow_spawn.global_position,
 		shot_target_position,
@@ -408,6 +461,9 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name != shoot_animation:
 		return
 
+	if is_dead:
+		return
+
 	bow_with_arrow.visible = true
 	bow_without_arrow.visible = false
 
@@ -417,7 +473,6 @@ func _on_animation_finished(animation_name: StringName) -> void:
 
 	_start_shoot_cooldown()
 
-	# Immediately return to the correct idle or move animation.
 	_update_movement_animation(
 		pause_patrol_while_aiming
 		and _has_valid_shooting_target()
@@ -426,11 +481,173 @@ func _on_animation_finished(animation_name: StringName) -> void:
 
 
 func _start_shoot_cooldown() -> void:
-	if not shot_cooldown_running:
+	if is_dead or not shot_cooldown_running:
 		return
 
 	await get_tree().create_timer(fire_interval).timeout
 
-	if is_inside_tree():
+	if is_inside_tree() and not is_dead:
 		shot_cooldown_running = false
 		can_shoot = true
+
+
+# --------------------------------------------------
+# HEALTH AND DAMAGE
+# --------------------------------------------------
+
+func _setup_damage_shader() -> void:
+	if body_sprite == null:
+		push_warning(
+			"ArcherEnemy: BodySprite not found. "
+			+ "Check body_sprite_path in the Inspector."
+		)
+		return
+
+	var shader_material := (
+		body_sprite.material as ShaderMaterial
+	)
+
+	if shader_material == null:
+		push_warning(
+			"ArcherEnemy: Assign the player's damage "
+			+ "ShaderMaterial to BodySprite."
+		)
+		return
+
+	# Duplicate the material so each archer flashes independently.
+	body_sprite.material = shader_material.duplicate()
+
+	shader_material = body_sprite.material as ShaderMaterial
+	shader_material.set_shader_parameter("damage_flash", 0.0)
+
+
+func take_damage(amount: int, attacker: Node2D = null) -> void:
+	if is_dead or amount <= 0:
+		return
+
+	current_health = maxi(current_health - amount, 0)
+
+	_apply_knockback(attacker)
+	_play_damage_flash()
+
+	print(
+		"Archer health: ",
+		current_health,
+		"/",
+		max_health
+	)
+
+	if current_health <= 0:
+		_die()
+
+
+func _apply_knockback(attacker: Node2D = null) -> void:
+	var source := attacker
+
+	if not is_instance_valid(source):
+		var candidate := get_tree().get_first_node_in_group("player")
+		if candidate is Node2D:
+			source = candidate
+
+	var direction := Vector2.ZERO
+	if is_instance_valid(source):
+		direction = global_position - source.global_position
+
+	if direction.length_squared() < 0.001:
+		# Fallback: push opposite the enemy's current facing direction.
+		direction = Vector2.RIGHT.rotated(global_rotation)
+
+	knockback_velocity = direction.normalized() * knockback_force
+	knockback_timer = maxf(knockback_duration, 0.0)
+
+
+func _play_damage_flash() -> void:
+	if body_sprite == null:
+		return
+
+	var shader_material := (
+		body_sprite.material as ShaderMaterial
+	)
+
+	if shader_material == null:
+		return
+
+	if damage_tween and damage_tween.is_valid():
+		damage_tween.kill()
+
+	damage_tween = create_tween()
+
+	var half_flash_duration := (
+		maxf(damage_flash_duration, 0.01)
+		/ float(maxi(damage_flash_count * 2, 1))
+	)
+
+	shader_material.set_shader_parameter("damage_flash", 0.0)
+
+	for i in range(damage_flash_count):
+		damage_tween.tween_method(
+			_set_damage_flash,
+			0.0,
+			1.0,
+			half_flash_duration
+		)
+
+		damage_tween.tween_method(
+			_set_damage_flash,
+			1.0,
+			0.0,
+			half_flash_duration
+		)
+
+	damage_tween.tween_callback(
+		func() -> void:
+			_set_damage_flash(0.0)
+	)
+
+
+func _set_damage_flash(value: float) -> void:
+	if body_sprite == null:
+		return
+
+	var shader_material := (
+		body_sprite.material as ShaderMaterial
+	)
+
+	if shader_material:
+		shader_material.set_shader_parameter(
+			"damage_flash",
+			value
+		)
+
+
+func _die() -> void:
+	if is_dead:
+		return
+
+	is_dead = true
+	knockback_velocity = Vector2.ZERO
+	knockback_timer = 0.0
+	velocity = Vector2.ZERO
+
+	shot_pending = false
+	is_shooting = false
+	can_shoot = false
+	shot_cooldown_running = false
+	patrol_active = false
+
+	if damage_tween and damage_tween.is_valid():
+		damage_tween.kill()
+
+	_set_damage_flash(0.0)
+
+	# Disable collision layer 1 and mask 1.
+	# Adjust these if your project uses different layers.
+	set_collision_layer_value(1, false)
+	set_collision_mask_value(1, false)
+
+	if is_instance_valid(detection_range):
+		detection_range.set_deferred("monitoring", false)
+
+	print("Archer defeated.")
+
+	queue_free()

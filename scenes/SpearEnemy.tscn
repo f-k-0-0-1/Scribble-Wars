@@ -2,12 +2,17 @@
 
 [ext_resource type="Texture2D" uid="uid://bmxfusnmydlaq" path="res://assets/PNG/Double (128px)/Characters/purple_character.png" id="1_7b1sg"]
 [ext_resource type="Script" uid="uid://byq73bk1xsxd3" path="res://scripts/spear_enemy.gd" id="1_vngla"]
+[ext_resource type="Shader" uid="uid://drtyxouyadjbs" path="res://resources/player_damage.gdshader" id="2_2riom"]
 [ext_resource type="Texture2D" uid="uid://cr37tgwam4vo3" path="res://assets/PNG/Double (128px)/Items/weapon_spear.png" id="2_atq5r"]
 [ext_resource type="Texture2D" uid="uid://bpl5ei2ww3rn8" path="res://assets/PNG/Double (128px)/Characters/purple_hand.png" id="2_ck8ct"]
 [ext_resource type="AudioStream" uid="uid://t333uk7fkqu1" path="res://audio/spear_thrust_sfx.ogg" id="4_md6q8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_md6q8"]
 radius = 40.012497
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lcmep"]
+shader = ExtResource("2_2riom")
+shader_parameter/damage_flash = 0.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_atq5r"]
 height = 114.171814
@@ -191,6 +196,7 @@ script = ExtResource("1_vngla")
 shape = SubResource("CircleShape2D_md6q8")
 
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=1714549485]
+material = SubResource("ShaderMaterial_lcmep")
 texture = ExtResource("1_7b1sg")
 
 [node name="WeaponPivot" type="Node2D" parent="." unique_id=1607709409]

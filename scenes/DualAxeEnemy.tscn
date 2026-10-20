@@ -2,12 +2,17 @@
 
 [ext_resource type="Script" uid="uid://d1ust85l6hjxg" path="res://scripts/dual_axe_enemy.gd" id="1_hvtue"]
 [ext_resource type="Texture2D" uid="uid://cj0v7ks3ril7u" path="res://assets/PNG/Double (128px)/Characters/red_character.png" id="1_usrxt"]
+[ext_resource type="Shader" uid="uid://drtyxouyadjbs" path="res://resources/player_damage.gdshader" id="2_hi76f"]
 [ext_resource type="Texture2D" uid="uid://b67qmmwqru301" path="res://assets/PNG/Double (128px)/Characters/red_hand.png" id="2_jnmoh"]
 [ext_resource type="Texture2D" uid="uid://b7c7y3dp5wjau" path="res://assets/PNG/Double (128px)/Items/weapon_axe_double.png" id="3_jnmoh"]
-[ext_resource type="AudioStream" uid="uid://ccec16gn4h30r" path="res://audio/swod_slash_sfx.ogg" id="5_13hxs"]
+[ext_resource type="AudioStream" uid="uid://cat8jhj6ewhhc" path="res://audio/spin_woosh_sfx.ogg" id="5_13hxs"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hvtue"]
 radius = 40.012497
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oxr5t"]
+shader = ExtResource("2_hi76f")
+shader_parameter/damage_flash = 0.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_13hxs"]
 radius = 19.026299
@@ -20,31 +25,31 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("BodyPivot:rotation")
+tracks/0/path = NodePath("BodyPivot:position")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [0.0]
+"values": [Vector2(0, 0)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("BodyPivot:position")
+tracks/1/path = NodePath("BodyPivot/LeftHandPivot:rotation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(0, 0)]
+"values": [0.0]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("BodyPivot/LeftHandPivot:rotation")
+tracks/2/path = NodePath("BodyPivot/RightHandPivot:rotation")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
@@ -56,14 +61,78 @@ tracks/2/keys = {
 tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
-tracks/3/path = NodePath("BodyPivot/RightHandPivot:rotation")
+tracks/3/path = NodePath("AnimationPlayer:speed_scale")
 tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
+"values": [0.5]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("BodyPivot:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
 "values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_hi76f"]
+resource_name = "attack"
+length = 4.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodyPivot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.4, 0.65, 1.15, 1.65, 2.15, 2.65, 3.15, 3.4, 3.6, 3.8, 4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-4, 0), Vector2(10, 0), Vector2(14, 0), Vector2(14, 0), Vector2(14, 0), Vector2(14, 0), Vector2(14, 0), Vector2(14, 0), Vector2(10, 0), Vector2(-5, 0), Vector2(-2, 0), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodyPivot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.4, 0.65, 1.15, 1.65, 2.15, 2.65, 3.15, 3.4, 3.6, 3.8, 4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.34906584, 0.0, 6.2831855, 12.566371, 18.849556, 25.132742, 31.415926, 37.699112, 40.840706, 41.8879, 41.364304, 37.699112]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BodyPivot/LeftHandPivot:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.65, 0.9, 1.15, 1.4, 1.65, 2.15, 2.65, 3.4, 3.7, 4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [-0.2617994, -1.0471976, -2.0943952, -1.0471976, -2.0943952, -1.0471976, -2.0943952, -1.0471976, -2.0943952, -1.3962634, -0.43633232, 0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("BodyPivot/RightHandPivot:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.65, 0.9, 1.15, 1.4, 1.65, 2.15, 2.65, 3.4, 3.7, 4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.2617994, 1.0471976, 2.0943952, 1.0471976, 2.0943952, 1.0471976, 2.0943952, 1.0471976, 2.0943952, 1.3962634, 0.43633232, 0.0]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -72,62 +141,10 @@ tracks/4/path = NodePath("AnimationPlayer:speed_scale")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
+"times": PackedFloat32Array(0, 4),
+"transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [0.5]
-}
-
-[sub_resource type="Animation" id="Animation_hi76f"]
-resource_name = "attack"
-length = 0.8
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("BodyPivot:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
-"update": 0,
-"values": [0.0, -0.61086524, -1.5707964, -4.1887903, -6.2831855, -6.981317, -6.2831855]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("BodyPivot:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
-"update": 0,
-"values": [Vector2(0, 0), Vector2(-3, 0), Vector2(8, 0), Vector2(18, 0), Vector2(12, 0), Vector2(3, 0), Vector2(0, 0)]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("BodyPivot/LeftHandPivot:rotation")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.5, 0.8),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
-"update": 0,
-"values": [0.0, -0.2617994, -0.5235988, -0.2617994, 0.0]
-}
-tracks/3/type = "value"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("BodyPivot/RightHandPivot:rotation")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.5, 0.8),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
-"update": 0,
-"values": [0.0, 0.2617994, 0.5235988, 0.2617994, 0.0]
+"values": [4.0, 4.0]
 }
 
 [sub_resource type="Animation" id="Animation_oxr5t"]
@@ -173,7 +190,7 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_s5avp"]
 resource_name = "move"
-length = 0.39999999999999997
+length = 0.4
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -235,6 +252,7 @@ _data = {
 [node name="DualAxeEnemy" type="CharacterBody2D" unique_id=1699474106]
 script = ExtResource("1_hvtue")
 rotation_offset_degrees = 90.0
+attack_active_time = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1801419904]
 shape = SubResource("CircleShape2D_hvtue")
@@ -242,6 +260,7 @@ shape = SubResource("CircleShape2D_hvtue")
 [node name="BodyPivot" type="Node2D" parent="." unique_id=67599336]
 
 [node name="BodySprite" type="Sprite2D" parent="BodyPivot" unique_id=1425014821]
+material = SubResource("ShaderMaterial_oxr5t")
 texture = ExtResource("1_usrxt")
 
 [node name="LeftHandPivot" type="Node2D" parent="BodyPivot" unique_id=178892820]
@@ -296,5 +315,5 @@ speed_scale = 0.5
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=200692044]
 stream = ExtResource("5_13hxs")
-volume_db = -5.0
+volume_db = -8.0
 max_distance = 300.0

@@ -4,10 +4,15 @@
 [ext_resource type="Script" uid="uid://b8jwtpcausknv" path="res://scripts/player.gd" id="1_g2els"]
 [ext_resource type="PackedScene" uid="uid://dkqf4axbpxx5n" path="res://scenes/Sword.tscn" id="2_qlg0r"]
 [ext_resource type="PackedScene" uid="uid://x3jdbwqax88t" path="res://scenes/Shield.tscn" id="3_tuyoq"]
+[ext_resource type="Shader" uid="uid://drtyxouyadjbs" path="res://resources/player_damage.gdshader" id="4_tuyoq"]
 [ext_resource type="Texture2D" uid="uid://up4tskoogxub" path="res://assets/PNG/Double (128px)/Characters/green_hand.png" id="5_qlg0r"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_g2els"]
 radius = 38.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tuyoq"]
+shader = ExtResource("4_tuyoq")
+shader_parameter/damage_flash = 0.0
 
 [sub_resource type="Animation" id="Animation_qhqgy"]
 length = 0.001
@@ -264,6 +269,12 @@ _data = {
 &"move": SubResource("Animation_qlg0r")
 }
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_fjrip"]
+radius = 47.042534
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_smehm"]
+radius = 37.215588
+
 [node name="Player" type="CharacterBody2D" unique_id=1406513582 groups=["player"]]
 script = ExtResource("1_g2els")
 starting_right_hand_item = ExtResource("2_qlg0r")
@@ -278,6 +289,7 @@ shape = SubResource("CircleShape2D_g2els")
 [node name="BodyPivot" type="Node2D" parent="." unique_id=1386300354]
 
 [node name="BodySprite" type="Sprite2D" parent="BodyPivot" unique_id=1927375854]
+material = SubResource("ShaderMaterial_tuyoq")
 scale = Vector2(1.02, 0.98)
 texture = ExtResource("1_3vyb7")
 
@@ -308,13 +320,17 @@ scale = Vector2(0.75, 0.75)
 texture = ExtResource("5_qlg0r")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=1659187725]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1609588380]
+shape = SubResource("CircleShape2D_fjrip")
 
 [node name="Combat" type="Node2D" parent="." unique_id=1942723827]
 
 [node name="AttackOrigin" type="Marker2D" parent="Combat" unique_id=2110603]
 
 [node name="AttackHitbox" type="Area2D" parent="Combat" unique_id=2079499153]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Combat/AttackHitbox" unique_id=331940773]
+shape = SubResource("CircleShape2D_smehm")

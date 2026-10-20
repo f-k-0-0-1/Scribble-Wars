@@ -20,8 +20,8 @@ enum EnemyState {
 @export var rotation_offset_degrees: float = 0.0
 
 @export_group("Combat")
-@export var attack_range: float = 70.0
-@export var attack_separation_distance: float = 20.0
+@export var attack_range: float = 50.0
+@export var attack_separation_distance: float = 0.0
 @export var attack_damage: int = 10
 @export var attack_cooldown: float = 1.0
 @export var attack_windup: float = 0.25
@@ -38,6 +38,19 @@ enum EnemyState {
 @export var shield_block_method: StringName = &"block_by_shield"
 @export var play_block_sound: bool = true
 
+@export_group("Health")
+@export var max_health: int = 100
+
+@export_group("Knockback")
+@export var knockback_force: float = 260.0
+@export var knockback_duration: float = 0.16
+@export var knockback_decay: float = 1400.0
+
+@export_group("Damage Visuals")
+@export var damage_flash_count: int = 3
+@export var damage_flash_duration: float = 0.3
+
+
 var state: EnemyState = EnemyState.PATROL
 var player: Node2D
 
@@ -52,6 +65,13 @@ var blocked_this_attack: bool = false
 
 var original_path: Path2D
 var returning_to_patrol: bool = false
+
+var current_health: int
+var is_dead: bool = false
+var damage_tween: Tween
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_timer: float = 0.0
+
 
 @onready var body_sprite: Sprite2D = $BodySprite
 @onready var weapon_pivot: Node2D = $WeaponPivot
@@ -71,6 +91,12 @@ var returning_to_patrol: bool = false
 
 func _ready() -> void:
 	add_to_group("enemies")
+	add_to_group("enemy")
+
+	current_health = maxi(max_health, 1)
+	max_health = current_health
+
+	_setup_damage_shader()
 
 	patrol_follower = get_parent() as PathFollow2D
 	patrol_active = patrol_enabled
@@ -123,7 +149,20 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if state == EnemyState.DEAD:
+	if is_dead or state == EnemyState.DEAD:
+		return
+
+	# Knockback temporarily overrides AI movement and pauses patrol/chase.
+	if knockback_timer > 0.0:
+		knockback_timer = maxf(knockback_timer - delta, 0.0)
+		velocity = knockback_velocity
+		move_and_slide()
+		knockback_velocity = knockback_velocity.move_toward(
+			Vector2.ZERO,
+			knockback_decay * delta
+		)
+		if knockback_timer <= 0.0:
+			knockback_velocity = Vector2.ZERO
 		return
 
 	_find_player_if_needed()
@@ -154,7 +193,6 @@ func _physics_process(delta: float) -> void:
 				_lose_player()
 				return
 
-			# Stop chasing when a wall blocks the player's visibility.
 			if not _has_line_of_sight(player):
 				_lose_player()
 				return
@@ -171,7 +209,6 @@ func _physics_process(delta: float) -> void:
 				_chase_player()
 
 		EnemyState.ATTACK:
-			# Cancel the attack if the player moves behind a wall.
 			if (
 				not is_instance_valid(player)
 				or not _has_line_of_sight(player)
@@ -205,14 +242,12 @@ func _has_line_of_sight(target: Node2D) -> bool:
 		line_of_sight_collision_mask
 	)
 
-	# Exclude this enemy's body so it cannot block its own ray.
 	query.exclude = [get_rid()]
 	query.collide_with_bodies = true
 	query.collide_with_areas = false
 
 	var result := get_world_2d().direct_space_state.intersect_ray(query)
 
-	# A clear ray must actually hit the player.
 	if result.is_empty():
 		return false
 
@@ -224,8 +259,6 @@ func _has_line_of_sight(target: Node2D) -> bool:
 	if collider == target:
 		return true
 
-	# Also support a player whose collision body is a child of
-	# the node belonging to the "player" group.
 	if collider is Node and target.is_ancestor_of(collider):
 		return true
 
@@ -288,7 +321,7 @@ func _update_patrol(delta: float) -> void:
 
 
 func _begin_chase() -> void:
-	if state != EnemyState.PATROL:
+	if state != EnemyState.PATROL or is_dead:
 		return
 
 	state = EnemyState.CHASE
@@ -304,7 +337,7 @@ func _begin_chase() -> void:
 
 
 func _chase_player() -> void:
-	if not is_instance_valid(player):
+	if not is_instance_valid(player) or is_dead:
 		return
 
 	var direction := (
@@ -319,7 +352,7 @@ func _chase_player() -> void:
 
 
 func _return_to_patrol() -> void:
-	if returning_to_patrol:
+	if returning_to_patrol or is_dead:
 		return
 
 	returning_to_patrol = true
@@ -390,7 +423,7 @@ func _maintain_attack_separation() -> void:
 
 
 func _start_attack() -> void:
-	if state != EnemyState.CHASE:
+	if state != EnemyState.CHASE or is_dead:
 		return
 
 	if attack_in_progress or not can_attack:
@@ -415,13 +448,14 @@ func _start_attack() -> void:
 
 	await get_tree().create_timer(attack_windup).timeout
 
-	if not is_inside_tree() or state == EnemyState.DEAD:
+	if not is_inside_tree() or is_dead:
 		_finish_attack_early()
 		return
 
 	if not is_instance_valid(player) or not _has_line_of_sight(player):
 		_finish_attack_early()
-		_lose_player()
+		if not is_dead:
+			_lose_player()
 		return
 
 	_maintain_attack_separation()
@@ -429,16 +463,16 @@ func _start_attack() -> void:
 
 	await get_tree().physics_frame
 
-	if not is_inside_tree() or state == EnemyState.DEAD:
+	if not is_inside_tree() or is_dead:
 		_finish_attack_early()
 		return
 
 	if not is_instance_valid(player) or not _has_line_of_sight(player):
 		_finish_attack_early()
-		_lose_player()
+		if not is_dead:
+			_lose_player()
 		return
 
-	# Check shields first so an active block prevents body damage.
 	if spear_hitbox.monitoring:
 		for area in spear_hitbox.get_overlapping_areas():
 			_handle_shield_collision(area)
@@ -448,14 +482,15 @@ func _start_attack() -> void:
 
 	await get_tree().create_timer(attack_active_time).timeout
 
-	if not is_inside_tree():
+	if not is_inside_tree() or is_dead:
+		_finish_attack_early()
 		return
 
 	spear_hitbox.set_deferred("monitoring", false)
 
 	await get_tree().create_timer(attack_recovery).timeout
 
-	if not is_inside_tree() or state == EnemyState.DEAD:
+	if not is_inside_tree() or is_dead:
 		_finish_attack_early()
 		return
 
@@ -474,12 +509,15 @@ func _finish_attack_early() -> void:
 func _reset_attack_cooldown() -> void:
 	await get_tree().create_timer(attack_cooldown).timeout
 
-	if is_inside_tree() and state != EnemyState.DEAD:
+	if is_inside_tree() and not is_dead:
 		can_attack = true
 
 
 func _on_spear_hitbox_area_entered(area: Area2D) -> void:
-	if state != EnemyState.ATTACK or not spear_hitbox.monitoring:
+	if is_dead or state != EnemyState.ATTACK:
+		return
+
+	if not spear_hitbox.monitoring:
 		return
 
 	_handle_shield_collision(area)
@@ -538,55 +576,212 @@ func _play_shield_block_sound() -> void:
 
 
 func _on_spear_hitbox_body_entered(body: Node2D) -> void:
-	if state != EnemyState.ATTACK or not spear_hitbox.monitoring:
+	if is_dead or state != EnemyState.ATTACK:
 		return
 
-	if blocked_this_attack:
+	if not spear_hitbox.monitoring or blocked_this_attack:
 		return
 
 	_apply_spear_hit(body)
 
 
 func _apply_spear_hit(body: Node2D) -> void:
-	if not body.is_in_group("player"):
+	if is_dead or not body.is_in_group("player"):
 		return
 
-	if blocked_this_attack:
+	if blocked_this_attack or body in attack_hit_targets:
 		return
 
-	if body in attack_hit_targets:
-		return
-
-	# Do not deal damage through walls.
 	if not _has_line_of_sight(body):
 		return
 
 	attack_hit_targets.append(body)
 
 	if body.has_method("take_damage"):
-		body.take_damage(attack_damage)
+		body.take_damage(attack_damage, self)
 	else:
-		push_warning("Player needs a take_damage(amount) method.")
+		push_warning("Player needs a take_damage(amount, attacker) method.")
 
 
 func _on_detection_body_entered(body: Node2D) -> void:
+	if is_dead:
+		return
+
 	if body.is_in_group("player") and _has_line_of_sight(body):
 		player = body
 
 
 func _on_detection_body_exited(body: Node2D) -> void:
 	if body == player:
-		# The physics process handles the chase distance and
-		# line-of-sight checks.
+		# Physics processing handles range and line-of-sight checks.
 		pass
 
 
 func _play_animation(animation_name: StringName) -> void:
+	if is_dead:
+		return
+
 	if not animation_player.has_animation(animation_name):
-		push_warning("Missing animation: " + String(animation_name))
+		push_warning(
+			"Missing animation: " + String(animation_name)
+		)
 		return
 
 	if animation_player.current_animation == animation_name:
 		return
 
 	animation_player.play(animation_name)
+
+
+# --------------------------------------------------
+# HEALTH AND DAMAGE
+# --------------------------------------------------
+
+func _setup_damage_shader() -> void:
+	if body_sprite == null:
+		push_warning("SpearEnemy: BodySprite was not found.")
+		return
+
+	var shader_material := body_sprite.material as ShaderMaterial
+
+	if shader_material == null:
+		push_warning(
+			"SpearEnemy: Assign the player's damage ShaderMaterial "
+			+ "to BodySprite."
+		)
+		return
+
+	# Each enemy gets an independent material instance.
+	body_sprite.material = shader_material.duplicate()
+
+	shader_material = body_sprite.material as ShaderMaterial
+	shader_material.set_shader_parameter("damage_flash", 0.0)
+
+
+func take_damage(amount: int, attacker: Node2D = null) -> void:
+	if is_dead or amount <= 0:
+		return
+
+	current_health = maxi(current_health - amount, 0)
+
+	_apply_knockback(attacker)
+	_play_damage_flash()
+
+	print(
+		"Spear enemy health: ",
+		current_health,
+		"/",
+		max_health
+	)
+
+	if current_health <= 0:
+		_die()
+
+
+func _apply_knockback(attacker: Node2D = null) -> void:
+	var source := attacker
+
+	if not is_instance_valid(source):
+		var candidate := get_tree().get_first_node_in_group("player")
+		if candidate is Node2D:
+			source = candidate
+
+	var direction := Vector2.ZERO
+	if is_instance_valid(source):
+		direction = global_position - source.global_position
+
+	if direction.length_squared() < 0.001:
+		# Fallback: push opposite the enemy's current facing direction.
+		direction = Vector2.RIGHT.rotated(global_rotation)
+
+	knockback_velocity = direction.normalized() * knockback_force
+	knockback_timer = maxf(knockback_duration, 0.0)
+
+
+func _play_damage_flash() -> void:
+	if body_sprite == null:
+		return
+
+	var shader_material := body_sprite.material as ShaderMaterial
+
+	if shader_material == null:
+		return
+
+	if damage_tween and damage_tween.is_valid():
+		damage_tween.kill()
+
+	damage_tween = create_tween()
+
+	var half_flash_duration := (
+		maxf(damage_flash_duration, 0.01)
+		/ float(maxi(damage_flash_count * 2, 1))
+	)
+
+	shader_material.set_shader_parameter("damage_flash", 0.0)
+
+	for i in range(damage_flash_count):
+		damage_tween.tween_method(
+			_set_damage_flash,
+			0.0,
+			1.0,
+			half_flash_duration
+		)
+
+		damage_tween.tween_method(
+			_set_damage_flash,
+			1.0,
+			0.0,
+			half_flash_duration
+		)
+
+	damage_tween.tween_callback(
+		func() -> void:
+			_set_damage_flash(0.0)
+	)
+
+
+func _set_damage_flash(value: float) -> void:
+	if body_sprite == null:
+		return
+
+	var shader_material := body_sprite.material as ShaderMaterial
+
+	if shader_material:
+		shader_material.set_shader_parameter(
+			"damage_flash",
+			value
+		)
+
+
+func _die() -> void:
+	if is_dead:
+		return
+
+	is_dead = true
+	knockback_velocity = Vector2.ZERO
+	knockback_timer = 0.0
+	state = EnemyState.DEAD
+
+	velocity = Vector2.ZERO
+	can_attack = false
+	attack_in_progress = false
+	patrol_active = false
+	player = null
+
+	spear_hitbox.set_deferred("monitoring", false)
+	detection_range.set_deferred("monitoring", false)
+
+	if attack_audio.playing:
+		attack_audio.stop()
+
+	if damage_tween and damage_tween.is_valid():
+		damage_tween.kill()
+
+	_set_damage_flash(0.0)
+
+	set_collision_layer_value(1, false)
+	set_collision_mask_value(1, false)
+
+	print("Spear enemy defeated.")
+
+	queue_free()

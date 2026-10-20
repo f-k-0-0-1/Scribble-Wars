@@ -4,11 +4,16 @@
 [ext_resource type="Texture2D" uid="uid://dwhjtrtut48yv" path="res://assets/PNG/Double (128px)/Characters/yellow_character.png" id="1_xmate"]
 [ext_resource type="Texture2D" uid="uid://bnnqoxs47i1d8" path="res://assets/PNG/Double (128px)/Items/weapon_bow_arrow.png" id="2_lxlf0"]
 [ext_resource type="PackedScene" uid="uid://x6ph7qjb4bwc" path="res://scenes/Arrow.tscn" id="2_w0a6h"]
+[ext_resource type="Shader" uid="uid://drtyxouyadjbs" path="res://resources/player_damage.gdshader" id="3_6ufl4"]
 [ext_resource type="Texture2D" uid="uid://hgtevigk41gf" path="res://assets/PNG/Double (128px)/Characters/yellow_hand.png" id="3_rqk3n"]
 [ext_resource type="Texture2D" uid="uid://bvn0x1ismq456" path="res://assets/PNG/Double (128px)/Items/weapon_bow.png" id="5_d4nl8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_lxlf0"]
 radius = 38.63936
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_t08lj"]
+shader = ExtResource("3_6ufl4")
+shader_parameter/damage_flash = 0.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_w0a6h"]
 radius = 45.891174
@@ -297,12 +302,14 @@ _data = {
 script = ExtResource("1_lxlf0")
 arrow_scene = ExtResource("2_w0a6h")
 patrol_rotation_offset_degrees = 90.0
+body_sprite_path = NodePath("BodySprite")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1555628383]
 shape = SubResource("CircleShape2D_lxlf0")
 
 [node name="BodySprite" type="Sprite2D" parent="." unique_id=52707498]
 z_index = 1
+material = SubResource("ShaderMaterial_t08lj")
 texture = ExtResource("1_xmate")
 
 [node name="BowPivot" type="Node2D" parent="." unique_id=2109001955]
