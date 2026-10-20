@@ -303,8 +303,39 @@ func stop_equipment_action() -> void:
 		left_hand_item.stop_action()
 
 
+func _try_block_incoming_damage(attacker: Node2D = null) -> bool:
+	if not is_blocking or not is_instance_valid(left_hand_item):
+		return false
+
+	if not left_hand_item.has_method("try_block_melee_attack"):
+		return false
+
+	# The shield script checks its active state and protected direction.
+	var blocked := bool(
+		left_hand_item.call("try_block_melee_attack", attacker)
+	)
+	if not blocked:
+		return false
+
+	# Notify the attacker immediately so its active hitbox/attack is cancelled
+	# and it recoils. This is idempotent on the SpearEnemy side.
+	if is_instance_valid(attacker) and attacker.has_method("on_blocked_by_shield"):
+		attacker.call("on_blocked_by_shield", left_hand_item)
+
+	return true
+
+
 func take_damage(amount: int, attacker: Node2D = null) -> void:
-	if is_dead or is_invulnerable or amount <= 0:
+	if is_dead or amount <= 0:
+		return
+
+	# Resolve shield blocking here as a final safeguard. The enemy's body-hit
+	# callback can run before the shield Area2D overlap callback in the same
+	# physics frame, so damage must not depend on callback order.
+	if _try_block_incoming_damage(attacker):
+		return
+
+	if is_invulnerable:
 		return
 
 	current_health = maxi(current_health - amount, 0)

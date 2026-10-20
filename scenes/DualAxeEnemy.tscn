@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://d25f2alu73tty"]
+[gd_scene format=3 uid="uid://dpbifnplekyjy"]
 
 [ext_resource type="Script" uid="uid://d1ust85l6hjxg" path="res://scripts/dual_axe_enemy.gd" id="1_hvtue"]
 [ext_resource type="Texture2D" uid="uid://cj0v7ks3ril7u" path="res://assets/PNG/Double (128px)/Characters/red_character.png" id="1_usrxt"]
@@ -8,7 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://cat8jhj6ewhhc" path="res://audio/spin_woosh_sfx.ogg" id="5_13hxs"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hvtue"]
-radius = 40.012497
+radius = 49.0408
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oxr5t"]
 shader = ExtResource("2_hi76f")

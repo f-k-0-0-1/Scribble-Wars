@@ -448,7 +448,7 @@ func _start_attack() -> void:
 
 	await get_tree().create_timer(attack_windup).timeout
 
-	if not is_inside_tree() or is_dead:
+	if not is_inside_tree() or is_dead or blocked_this_attack:
 		_finish_attack_early()
 		return
 
@@ -463,7 +463,7 @@ func _start_attack() -> void:
 
 	await get_tree().physics_frame
 
-	if not is_inside_tree() or is_dead:
+	if not is_inside_tree() or is_dead or blocked_this_attack:
 		_finish_attack_early()
 		return
 
@@ -482,7 +482,7 @@ func _start_attack() -> void:
 
 	await get_tree().create_timer(attack_active_time).timeout
 
-	if not is_inside_tree() or is_dead:
+	if not is_inside_tree() or is_dead or blocked_this_attack:
 		_finish_attack_early()
 		return
 
@@ -530,25 +530,62 @@ func _handle_shield_collision(area: Area2D) -> void:
 	if not area.is_in_group(shield_hitbox_group):
 		return
 
-	if blocked_this_attack:
+	if blocked_this_attack or not is_instance_valid(player):
 		return
 
-	var shield_owner: Node = area
-
-	while is_instance_valid(shield_owner) and shield_owner != player:
-		if _has_property(shield_owner, &"blocking_active"):
-			if not bool(shield_owner.get("blocking_active")):
+	# Find the Equipment node that owns the shield hitbox.
+	var shield_node: Node = area
+	while is_instance_valid(shield_node) and shield_node != player:
+		if _has_property(shield_node, &"blocking_active"):
+			if not bool(shield_node.get("blocking_active")):
 				return
 
-			blocked_this_attack = true
+			var blocked := false
+			if shield_node.has_method("try_block_melee_attack"):
+				blocked = bool(shield_node.call("try_block_melee_attack", self))
+			else:
+				# Fallback for shield scripts without the helper method.
+				blocked = true
 
-			if is_instance_valid(player):
-				attack_hit_targets.append(player)
+			if not blocked:
+				return
 
-			_play_shield_block_sound()
+			on_blocked_by_shield(shield_node as Node2D)
 			return
 
-		shield_owner = shield_owner.get_parent()
+		shield_node = shield_node.get_parent()
+
+
+func on_blocked_by_shield(shield: Node2D) -> void:
+	# This can be called from either the shield overlap callback or Player's
+	# damage guard. Ignore duplicate notifications for the same attack.
+	if is_dead or state != EnemyState.ATTACK or blocked_this_attack:
+		return
+
+	blocked_this_attack = true
+	if is_instance_valid(player) and player not in attack_hit_targets:
+		attack_hit_targets.append(player)
+
+	spear_hitbox.set_deferred("monitoring", false)
+	_apply_block_knockback(shield)
+	_finish_attack_early()
+
+	state = EnemyState.CHASE
+	_play_animation(move_animation)
+	# A blocked attack ends before the normal cooldown reset point.
+	_reset_attack_cooldown()
+
+
+func _apply_block_knockback(source: Node2D) -> void:
+	if not is_instance_valid(source) or is_dead:
+		return
+
+	var direction := global_position - source.global_position
+	if direction.length_squared() < 0.001:
+		direction = Vector2.RIGHT.rotated(global_rotation)
+
+	knockback_velocity = direction.normalized() * knockback_force
+	knockback_timer = maxf(knockback_duration, 0.0)
 
 
 func _has_property(
