@@ -305,7 +305,7 @@ func start_block() -> void:
 
 	if right_hand_item:
 		right_hand_item.block()
-
+		
 
 func stop_block() -> void:
 	if not is_blocking:
