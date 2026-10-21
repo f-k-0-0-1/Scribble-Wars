@@ -2,10 +2,11 @@
 
 [ext_resource type="Texture2D" uid="uid://yrwob4oxis7u" path="res://assets/PNG/Double (128px)/Characters/green_character.png" id="1_3vyb7"]
 [ext_resource type="Script" uid="uid://b8jwtpcausknv" path="res://scripts/player.gd" id="1_g2els"]
-[ext_resource type="PackedScene" uid="uid://dkqf4axbpxx5n" path="res://scenes/Sword.tscn" id="2_qlg0r"]
+[ext_resource type="PackedScene" uid="uid://b0ubi2dxq6axq" path="res://scenes/Sword.tscn" id="2_qlg0r"]
 [ext_resource type="PackedScene" uid="uid://x3jdbwqax88t" path="res://scenes/Shield.tscn" id="3_tuyoq"]
 [ext_resource type="Shader" uid="uid://drtyxouyadjbs" path="res://resources/player_damage.gdshader" id="4_tuyoq"]
 [ext_resource type="Texture2D" uid="uid://up4tskoogxub" path="res://assets/PNG/Double (128px)/Characters/green_hand.png" id="5_qlg0r"]
+[ext_resource type="Animation" path="res://resources/animations/player/attack.tres" id="6_fjrip"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_g2els"]
 radius = 38.0
@@ -264,6 +265,7 @@ tracks/3/keys = {
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_tuyoq"]
 _data = {
 &"RESET": SubResource("Animation_qhqgy"),
+&"attack": ExtResource("6_fjrip"),
 &"block": SubResource("Animation_tuyoq"),
 &"idle": SubResource("Animation_dqkch"),
 &"move": SubResource("Animation_qlg0r")

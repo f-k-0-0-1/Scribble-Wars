@@ -42,7 +42,6 @@ var damage_tween: Tween
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_timer: float = 0.0
 
-signal health_changed(current_health: int, max_health: int)
 
 @onready var body_pivot: Node2D = $BodyPivot
 @onready var body_sprite: Sprite2D = $BodyPivot/BodySprite
@@ -54,11 +53,10 @@ signal health_changed(current_health: int, max_health: int)
 @onready var left_socket: Marker2D = $LeftHandPivot/EquipmentSocket
 @onready var right_socket: Marker2D = $RightHandPivot/EquipmentSocket
 
+signal health_changed(current_health: int, max_health: int)
 
 func _ready() -> void:
 	add_to_group("player")
-
-	$AudioListener2D.make_current()
 
 	current_health = max_health
 	health_changed.emit(current_health, max_health)
@@ -265,11 +263,34 @@ func attack() -> void:
 		return
 
 	can_attack = false
+
+	# Play the weapon animation and the player body/hand animation together.
 	right_hand_item.attack()
 
-	await get_tree().create_timer(attack_cooldown).timeout
+	var previous_animation_speed_scale: float = animation_player.speed_scale
+	var body_attack_duration: float = 0.0
+	var has_body_attack: bool = animation_player.has_animation("attack")
+
+	if has_body_attack:
+		var attack_resource: Animation = animation_player.get_animation("attack")
+		body_attack_duration = attack_resource.length
+
+		# The attack animation has authored timing; keep it consistent even
+		# though idle/move may change AnimationPlayer.speed_scale.
+		animation_player.speed_scale = 1.0
+		animation_player.play("attack", 0.035)
+
+	# Don't allow a new swing to restart the body animation before recovery.
+	var attack_lock_duration: float = maxf(
+		maxf(attack_cooldown, 0.0),
+		body_attack_duration
+	)
+
+	await get_tree().create_timer(attack_lock_duration).timeout
 
 	if is_inside_tree() and not is_dead:
+		if has_body_attack:
+			animation_player.speed_scale = previous_animation_speed_scale
 		can_attack = true
 
 
@@ -335,21 +356,19 @@ func take_damage(
 	bypass_invulnerability: bool = false,
 	apply_hit_knockback: bool = true
 ) -> bool:
+	# Returning true means this hit actually reduced player health.
+	# Optional arguments preserve compatibility with enemies that call
+	# take_damage(amount) or take_damage(amount, attacker).
 	if is_dead or amount <= 0:
 		return false
 
-	# Always resolve the shield first. The Dual Axe spin may bypass normal
-	# invulnerability frames for its five timed hits, but it must never bypass
-	# a successful shield block.
+	# Always check the shield before invulnerability. This ensures a blocked
+	# hit never reduces health, including the Dual Axe multi-hit spin.
 	if _try_block_incoming_damage(attacker):
 		return false
 
 	if is_invulnerable and not bypass_invulnerability:
 		return false
-
-	# Do not restart the invulnerability timer for each multi-hit spin tick.
-	# It begins on the first accepted hit, as it does for ordinary damage.
-	var was_invulnerable := is_invulnerable
 
 	current_health = maxi(current_health - amount, 0)
 	health_changed.emit(current_health, max_health)
@@ -372,7 +391,10 @@ func take_damage(
 	if apply_hit_knockback:
 		_apply_knockback(attacker)
 
-	if not was_invulnerable:
+	# The Dual Axe spin bypasses existing invulnerability for its individual
+	# timed hits, but must not restart the ordinary invulnerability timer.
+	# All other enemies keep the original invulnerability behavior.
+	if not bypass_invulnerability:
 		_start_invulnerability()
 
 	return true
@@ -512,6 +534,13 @@ func heal(amount: int) -> void:
 
 
 func _is_attacking() -> bool:
+	# Keep the body and hands in the attack pose until their animation ends.
+	if (
+		animation_player.current_animation == "attack"
+		and animation_player.is_playing()
+	):
+		return true
+
 	if right_hand_item == null:
 		return false
 

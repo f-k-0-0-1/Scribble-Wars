@@ -1,0 +1,116 @@
+[gd_resource type="Animation" format=3]
+
+[resource]
+resource_name = "attack"
+length = 0.42
+loop_mode = 0
+step = 0.016667
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BodySprite:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, 2), Vector2(-1, 3), Vector2(2, -1), Vector2(3, 0), Vector2(1, -1), Vector2(0, 0), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BodySprite:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(0.96, 1.06), Vector2(0.93, 1.08), Vector2(1.09, 0.93), Vector2(1.05, 0.96), Vector2(0.98, 1.03), Vector2(1, 1), Vector2(1, 1)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BodySprite:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.034906585, -0.07853982, 0.10471976, 0.061086524, -0.02617994, 0.0, 0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("../LeftHandPivot/LeftHandSprite:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(-45, -33), Vector2(-42, -35), Vector2(-40, -36), Vector2(-49, -30), Vector2(-47, -29), Vector2(-44, -32), Vector2(-45, -33), Vector2(-45, -33)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("../LeftHandPivot/LeftHandSprite:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.10471976, -0.17453292, 0.20943952, 0.10471976, -0.034906585, 0.0, 0.0]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("../RightHandPivot/RightHandSprite:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(45, -33), Vector2(40, -31), Vector2(37, -29), Vector2(55, -31), Vector2(53, -28), Vector2(47, -32), Vector2(45, -33), Vector2(45, -33)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("../RightHandPivot/RightHandSprite:rotation")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0, 0.035, 0.085, 0.14, 0.2, 0.29, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [1.5707964, 1.8151424, 1.9373155, 1.2042772, 1.3962634, 1.6057029, 1.5707964, 1.5707964]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("../LeftHandPivot/LeftHandSprite:scale")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 0.085, 0.14, 0.2, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0.75, 0.75), Vector2(0.77, 0.73), Vector2(0.73, 0.77), Vector2(0.75, 0.75), Vector2(0.75, 0.75), Vector2(0.75, 0.75)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("../RightHandPivot/RightHandSprite:scale")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 0.085, 0.14, 0.2, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0.75, 0.75), Vector2(0.78, 0.72), Vector2(0.72, 0.78), Vector2(0.75, 0.75), Vector2(0.75, 0.75), Vector2(0.75, 0.75)]
+}
+
