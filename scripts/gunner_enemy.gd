@@ -112,6 +112,8 @@ var _missing_animation_warnings: Dictionary = {}
 @onready var body_sprite: Sprite2D = $BodyPivot/BodySprite
 
 @onready var gun_pivot: Node2D = $GunPivot
+@onready var body_pivot: Node2D = $BodyPivot
+
 @onready var muzzle: Marker2D = $GunPivot/Muzzle
 
 @onready var detection_range: Area2D = $DetectionRange
