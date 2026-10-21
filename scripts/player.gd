@@ -1,27 +1,84 @@
 
 extends CharacterBody2D
 
+# ==================================================
+# MOVEMENT
+# ==================================================
+
 @export_group("Movement")
 @export var SPEED: float = 300.0
 @export var hand_rotation_speed: float = 12.0
 @export var attack_cooldown: float = 0.35
 
+
+# ==================================================
+# SWORD COMBO
+# ==================================================
+
+@export_group("Sword Combo")
+@export_range(0.2, 0.9, 0.05) var combo_window_start_ratio: float = 0.55
+@export var combo_recovery_time: float = 0.10
+
+
+# ==================================================
+# AIM LOCK
+# ==================================================
+
+@export_group("Aim Lock")
+@export var aim_lock_enabled: bool = true
+@export var aim_lock_range: float = 160.0
+
+var locked_target: Node2D = null
+
+
+# ==================================================
+# BLOCK ORIENTATION
+# ==================================================
+
+@export_group("Block Orientation")
+@export var shield_forward_offset_degrees: float = 90.0
+
+
+# ==================================================
+# HEALTH
+# ==================================================
+
 @export_group("Health")
 @export var max_health: int = 100
 @export var invulnerability_duration: float = 0.8
 
+
+# ==================================================
+# DAMAGE EFFECT
+# ==================================================
+
 @export_group("Damage Effect")
 @export var damage_flash_duration: float = 0.5
 @export_range(1, 10, 1) var damage_flash_count: int = 3
+
+
+# ==================================================
+# KNOCKBACK
+# ==================================================
 
 @export_group("Knockback")
 @export var knockback_force: float = 300.0
 @export var knockback_duration: float = 0.18
 @export var knockback_decay: float = 12.0
 
+
+# ==================================================
+# EQUIPMENT
+# ==================================================
+
 @export_group("Equipment")
 @export var starting_right_hand_item: PackedScene
 @export var starting_left_hand_item: PackedScene
+
+
+# ==================================================
+# PLAYER STATE
+# ==================================================
 
 var current_health: int = 100
 var is_dead: bool = false
@@ -43,33 +100,72 @@ var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_timer: float = 0.0
 
 
+# ==================================================
+# COMBO STATE
+# ==================================================
+
+var combo_active: bool = false
+var combo_step: int = 0
+var combo_window_open: bool = false
+var combo_input_queued: bool = false
+
+var _combo_run_id: int = 0
+
+var _body_speed_before_combo: float = 1.0
+var _sword_speed_before_combo: float = 1.0
+var _shield_speed_before_combo: float = 1.0
+
+
+# ==================================================
+# NODE REFERENCES
+# ==================================================
+
 @onready var body_pivot: Node2D = $BodyPivot
 @onready var body_sprite: Sprite2D = $BodyPivot/BodySprite
-@onready var animation_player: AnimationPlayer = $BodyPivot/AnimationPlayer
+
+@onready var animation_player: AnimationPlayer = (
+	$BodyPivot/AnimationPlayer
+)
 
 @onready var left_hand_pivot: Node2D = $LeftHandPivot
 @onready var right_hand_pivot: Node2D = $RightHandPivot
 
-@onready var left_socket: Marker2D = $LeftHandPivot/EquipmentSocket
-@onready var right_socket: Marker2D = $RightHandPivot/EquipmentSocket
+@onready var left_socket: Marker2D = (
+	$LeftHandPivot/EquipmentSocket
+)
+
+@onready var right_socket: Marker2D = (
+	$RightHandPivot/EquipmentSocket
+)
+
 
 signal health_changed(current_health: int, max_health: int)
+
+
+# ==================================================
+# INITIALIZATION
+# ==================================================
 
 func _ready() -> void:
 	add_to_group("player")
 
+	# Correct the shield orientation after the ordinary animations.
+	process_priority = 100
+
+	max_health = maxi(max_health, 1)
 	current_health = max_health
+
 	health_changed.emit(current_health, max_health)
 
 	_setup_damage_shader()
 
 	joystick_node = get_tree().get_first_node_in_group("joystick")
 
-	if joystick_node:
+	if is_instance_valid(joystick_node):
 		_connect_joystick_signals()
 	else:
 		push_warning(
-			"JoystickControl not found. Check the 'joystick' group."
+            "JoystickControl not found. Check the 'joystick' group."
 		)
 
 	if starting_right_hand_item:
@@ -86,13 +182,17 @@ func _setup_damage_shader() -> void:
 
 	if shader_material == null:
 		push_warning(
-			"BodySprite needs a ShaderMaterial using player_damage.gdshader."
+            "BodySprite needs a ShaderMaterial using player_damage.gdshader."
 		)
 		return
 
 	body_sprite.material = shader_material.duplicate()
 	body_sprite.material.set_shader_parameter("damage_flash", 0.0)
 
+
+# ==================================================
+# JOYSTICK INPUT
+# ==================================================
 
 func _connect_joystick_signals() -> void:
 	var movement_callback := Callable(self, "_on_joystick_moved")
@@ -139,6 +239,47 @@ func _on_joystick_moved(direction: Vector2) -> void:
 	joystick_direction = direction.limit_length(1.0)
 
 
+# ==================================================
+# BLOCK ORIENTATION
+# ==================================================
+
+func _process(_delta: float) -> void:
+	if is_dead:
+		return
+
+	if is_blocking:
+		_set_hand_pivots_for_facing_direction()
+		_orient_blocking_shield()
+
+
+func _set_hand_pivots_for_facing_direction() -> void:
+	var target_angle: float = facing_direction.angle() + PI / 2.0
+
+	left_hand_pivot.rotation = target_angle
+	right_hand_pivot.rotation = target_angle
+
+
+func _orient_blocking_shield() -> void:
+	if not is_instance_valid(left_hand_item):
+		return
+
+	var shield_pivot := (
+		left_hand_item.get_node_or_null("ShieldPivot") as Node2D
+	)
+
+	if shield_pivot == null:
+		return
+
+	shield_pivot.global_rotation = (
+		facing_direction.angle()
+		+ deg_to_rad(shield_forward_offset_degrees)
+	)
+
+
+# ==================================================
+# MOVEMENT
+# ==================================================
+
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		velocity = Vector2.ZERO
@@ -148,7 +289,7 @@ func _physics_process(delta: float) -> void:
 		"left",
 		"right",
 		"up",
-		"down"
+        "down"
 	)
 
 	var direction := (
@@ -156,12 +297,13 @@ func _physics_process(delta: float) -> void:
 	).limit_length(1.0)
 
 	if knockback_timer > 0.0:
-		knockback_timer = maxf(knockback_timer - delta, 0.0)
+		knockback_timer = maxf(
+			knockback_timer - delta,
+			0.0
+		)
 
-		# Knockback takes priority over normal movement.
 		velocity = knockback_velocity
 
-		# Gradually reduce the knockback speed.
 		knockback_velocity = knockback_velocity.move_toward(
 			Vector2.ZERO,
 			knockback_force * knockback_decay * delta
@@ -179,16 +321,23 @@ func _physics_process(delta: float) -> void:
 		or knockback_timer > 0.0
 	)
 
-	if direction.length_squared() > 0.001:
+	# During a combo, aim lock owns the facing direction.
+	# Otherwise use the player's normal movement direction.
+	if combo_active and is_instance_valid(locked_target):
+		_update_aim_lock()
+	elif not combo_active and direction.length_squared() > 0.001:
 		facing_direction = direction.normalized()
 
-	if not _is_attacking():
+	# Preserve idle/move animations while blocking. The shield and sword
+	# keep their own equipment animations active.
+	if not combo_active:
 		if is_moving:
 			_play_animation("move")
 		else:
 			_play_animation("idle")
 
-	_update_hands(delta)
+		if not is_blocking:
+			_update_hands(delta)
 
 	if Input.is_action_just_pressed("attack"):
 		attack()
@@ -201,8 +350,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_hands(delta: float) -> void:
-	var target_angle := facing_direction.angle() + PI / 2.0
-	var weight := minf(hand_rotation_speed * delta, 1.0)
+	var target_angle: float = facing_direction.angle() + PI / 2.0
+	var weight: float = minf(hand_rotation_speed * delta, 1.0)
 
 	left_hand_pivot.rotation = lerp_angle(
 		left_hand_pivot.rotation,
@@ -216,6 +365,82 @@ func _update_hands(delta: float) -> void:
 		weight
 	)
 
+
+# ==================================================
+# AIM LOCK
+# ==================================================
+
+func _acquire_aim_lock_target() -> Node2D:
+	if not aim_lock_enabled:
+		return null
+
+	var nearest_enemy: Node2D = null
+	var nearest_distance: float = maxf(aim_lock_range, 0.0)
+
+	for candidate in get_tree().get_nodes_in_group("enemy"):
+		if not candidate is Node2D:
+			continue
+
+		var enemy := candidate as Node2D
+
+		if enemy == self or enemy.is_queued_for_deletion():
+			continue
+
+		if not enemy.has_method("take_damage"):
+			continue
+
+		# Skip enemies that expose an is_dead property and are dead.
+		var has_dead_property := false
+
+		for property_info in enemy.get_property_list():
+			if StringName(property_info["name"]) == &"is_dead":
+				has_dead_property = true
+				break
+
+		if has_dead_property and bool(enemy.get("is_dead")):
+			continue
+
+		var distance: float = global_position.distance_to(
+			enemy.global_position
+		)
+
+		if distance <= nearest_distance:
+			nearest_distance = distance
+			nearest_enemy = enemy
+
+	return nearest_enemy
+
+
+func _update_aim_lock() -> void:
+	if not is_instance_valid(locked_target):
+		locked_target = null
+		return
+
+	if locked_target.is_queued_for_deletion():
+		locked_target = null
+		return
+
+	var target_direction: Vector2 = (
+		locked_target.global_position - global_position
+	)
+
+	if target_direction.length_squared() < 0.001:
+		return
+
+	facing_direction = target_direction.normalized()
+
+	# Keep the hand pivots aimed toward the locked target during the combo.
+	# The Player AnimationPlayer can still animate the body independently.
+	_set_hand_pivots_for_facing_direction()
+
+
+func _clear_aim_lock() -> void:
+	locked_target = null
+
+
+# ==================================================
+# EQUIPMENT
+# ==================================================
 
 func equip_right_hand(scene: PackedScene) -> void:
 	if right_hand_item:
@@ -255,57 +480,324 @@ func equip_left_hand(scene: PackedScene) -> void:
 	item.reset_pose()
 
 
+func _get_item_animation_player(
+	item: Equipment
+) -> AnimationPlayer:
+	if not is_instance_valid(item):
+		return null
+
+	return item.get_node_or_null("AnimationPlayer") as AnimationPlayer
+
+
+# ==================================================
+# COMBO ENTRY POINT
+# ==================================================
+
 func attack() -> void:
-	if is_dead or not can_attack or is_blocking:
+	if is_dead or is_blocking:
 		return
 
-	if right_hand_item == null:
+	if not is_instance_valid(right_hand_item):
 		return
 
+	# Additional clicks queue the next strike during the combo window.
+	if combo_active:
+		if combo_window_open and combo_step < 3:
+			combo_input_queued = true
+		return
+
+	if not can_attack:
+		return
+
+	# Lock the nearest enemy before beginning the first strike.
+	locked_target = _acquire_aim_lock_target()
+
+	if is_instance_valid(locked_target):
+		var direction_to_target := (
+			locked_target.global_position - global_position
+		)
+
+		if direction_to_target.length_squared() > 0.001:
+			facing_direction = direction_to_target.normalized()
+			_set_hand_pivots_for_facing_direction()
+
+	combo_active = true
 	can_attack = false
+	combo_step = 0
+	combo_window_open = false
+	combo_input_queued = false
 
-	# Play the weapon animation and the player body/hand animation together.
-	right_hand_item.attack()
+	_combo_run_id += 1
 
-	var previous_animation_speed_scale: float = animation_player.speed_scale
-	var body_attack_duration: float = 0.0
-	var has_body_attack: bool = animation_player.has_animation("attack")
+	_body_speed_before_combo = animation_player.speed_scale
 
-	if has_body_attack:
-		var attack_resource: Animation = animation_player.get_animation("attack")
-		body_attack_duration = attack_resource.length
+	var sword_player := _get_item_animation_player(right_hand_item)
 
-		# The attack animation has authored timing; keep it consistent even
-		# though idle/move may change AnimationPlayer.speed_scale.
-		animation_player.speed_scale = 1.0
-		animation_player.play("attack", 0.035)
+	if sword_player:
+		_sword_speed_before_combo = sword_player.speed_scale
 
-	# Don't allow a new swing to restart the body animation before recovery.
-	var attack_lock_duration: float = maxf(
-		maxf(attack_cooldown, 0.0),
-		body_attack_duration
+	var shield_player := _get_item_animation_player(left_hand_item)
+
+	if shield_player:
+		_shield_speed_before_combo = shield_player.speed_scale
+
+	_run_combo_sequence(_combo_run_id)
+
+
+# ==================================================
+# COMBO SEQUENCE
+# ==================================================
+
+func _run_combo_sequence(run_id: int) -> void:
+	for step in range(1, 4):
+		if not _combo_run_is_valid(run_id):
+			return
+
+		combo_step = step
+		combo_input_queued = false
+		combo_window_open = false
+
+		_play_combo_step(step)
+
+		var animation_duration: float = _get_combo_step_duration(step)
+
+		animation_duration = maxf(
+			animation_duration,
+			maxf(attack_cooldown, 0.05)
+		)
+
+		var window_start: float = clampf(
+			animation_duration * combo_window_start_ratio,
+			0.05,
+			maxf(animation_duration - 0.02, 0.05)
+		)
+
+		await get_tree().create_timer(window_start).timeout
+
+		if not _combo_run_is_valid(run_id):
+			return
+
+		combo_window_open = step < 3
+
+		var remaining_time: float = maxf(
+			animation_duration - window_start,
+			0.02
+		)
+
+		await get_tree().create_timer(remaining_time).timeout
+
+		if not _combo_run_is_valid(run_id):
+			return
+
+		combo_window_open = false
+
+		if step >= 3 or not combo_input_queued:
+			break
+
+	if not _combo_run_is_valid(run_id):
+		return
+
+	if combo_recovery_time > 0.0:
+		await get_tree().create_timer(
+			combo_recovery_time
+		).timeout
+
+	if not _combo_run_is_valid(run_id):
+		return
+
+	_restore_combo_animation_speeds()
+
+	combo_active = false
+	combo_step = 0
+	combo_window_open = false
+	combo_input_queued = false
+	can_attack = true
+
+	_clear_aim_lock()
+
+	if not is_blocking:
+		if velocity.length_squared() > 1.0:
+			_play_animation("move")
+		else:
+			_play_animation("idle")
+
+
+func _combo_run_is_valid(run_id: int) -> bool:
+	return (
+		is_inside_tree()
+		and not is_dead
+		and combo_active
+		and _combo_run_id == run_id
 	)
 
-	await get_tree().create_timer(attack_lock_duration).timeout
 
-	if is_inside_tree() and not is_dead:
-		if has_body_attack:
-			animation_player.speed_scale = previous_animation_speed_scale
-		can_attack = true
+func _restore_combo_animation_speeds() -> void:
+	animation_player.speed_scale = _body_speed_before_combo
 
+	var sword_player := _get_item_animation_player(right_hand_item)
+
+	if sword_player:
+		sword_player.speed_scale = _sword_speed_before_combo
+
+	var shield_player := _get_item_animation_player(left_hand_item)
+
+	if shield_player:
+		shield_player.speed_scale = _shield_speed_before_combo
+
+
+# ==================================================
+# COMBO ANIMATION PLAYBACK
+# ==================================================
+
+func _play_combo_step(step: int) -> void:
+	var animation_name: StringName = _get_combo_animation_name(step)
+
+	# The Player scene can use the existing generic attack animation.
+	# Separate attack_2 and attack_3 animations are optional on the body.
+	var body_animation: StringName = animation_name
+
+	if not animation_player.has_animation(body_animation):
+		body_animation = &"attack"
+
+	if animation_player.has_animation(body_animation):
+		animation_player.speed_scale = 1.0
+		animation_player.play(body_animation, 0.025)
+
+	# Play the matching Sword animation.
+	_play_equipment_animation(
+		right_hand_item,
+		animation_name,
+		&"attack"
+	)
+
+	# Play Shield attack_3 only during the third strike.
+	if step == 3:
+		_play_equipment_animation(
+			left_hand_item,
+			&"attack_3",
+			&""
+		)
+
+
+func _get_combo_animation_name(step: int) -> StringName:
+	match step:
+		1:
+			return &"attack"
+		2:
+			return &"attack_2"
+		3:
+			return &"attack_3"
+		_:
+			return &""
+
+
+func _play_equipment_animation(
+	item: Equipment,
+	preferred_animation: StringName,
+	fallback_animation: StringName
+) -> void:
+	if not is_instance_valid(item):
+		return
+
+	var item_player := _get_item_animation_player(item)
+
+	if item_player == null:
+		push_warning(
+            "Equipment '%s' has no AnimationPlayer."
+			% item.name
+		)
+		return
+
+	var animation_to_play: StringName = preferred_animation
+
+	if not item_player.has_animation(animation_to_play):
+		if (
+			fallback_animation != &""
+			and item_player.has_animation(fallback_animation)
+		):
+			animation_to_play = fallback_animation
+		else:
+			push_warning(
+                "Animation '%s' is missing from equipment '%s'."
+				% [String(preferred_animation), item.name]
+			)
+			return
+
+	item_player.speed_scale = 1.0
+	item_player.play(animation_to_play, 0.025)
+
+
+# ==================================================
+# COMBO ANIMATION DURATION
+# ==================================================
+
+func _get_combo_step_duration(step: int) -> float:
+	var animation_name: StringName = _get_combo_animation_name(step)
+	var duration: float = 0.05
+
+	# Player body uses attack as a fallback if the named combo clip
+	# isn't present in the Player scene.
+	var body_animation: StringName = animation_name
+
+	if not animation_player.has_animation(body_animation):
+		body_animation = &"attack"
+
+	if animation_player.has_animation(body_animation):
+		duration = maxf(
+			duration,
+			animation_player.get_animation(body_animation).length
+		)
+
+	# Sword animation duration.
+	var sword_player := _get_item_animation_player(right_hand_item)
+
+	if sword_player:
+		var sword_animation: StringName = animation_name
+
+		if not sword_player.has_animation(sword_animation):
+			sword_animation = &"attack"
+
+		if sword_player.has_animation(sword_animation):
+			duration = maxf(
+				duration,
+				sword_player.get_animation(sword_animation).length
+			)
+
+	# The finisher also waits for the Shield animation.
+	if step == 3:
+		var shield_player := _get_item_animation_player(left_hand_item)
+
+		if shield_player and shield_player.has_animation(&"attack_3"):
+			duration = maxf(
+				duration,
+				shield_player.get_animation(&"attack_3").length
+			)
+
+	return duration
+
+
+# ==================================================
+# SHIELD BLOCK
+# ==================================================
 
 func start_block() -> void:
-	if is_dead or is_blocking:
+	if is_dead or is_blocking or combo_active:
 		return
 
 	is_blocking = true
 
-	if left_hand_item:
+	_set_hand_pivots_for_facing_direction()
+
+	# Keep player idle/move animations running. Shield and Sword use
+	# their own block animations.
+	if is_instance_valid(left_hand_item):
 		left_hand_item.block()
 
-	if right_hand_item:
+	if is_instance_valid(right_hand_item):
 		right_hand_item.block()
-		
+
+	_orient_blocking_shield()
+
 
 func stop_block() -> void:
 	if not is_blocking:
@@ -313,42 +805,64 @@ func stop_block() -> void:
 
 	is_blocking = false
 
-	if left_hand_item:
+	if is_instance_valid(left_hand_item):
 		left_hand_item.stop_action()
 
-	if right_hand_item:
+	if is_instance_valid(right_hand_item):
 		right_hand_item.stop_action()
+
+	if velocity.length_squared() > 1.0:
+		_play_animation("move")
+	else:
+		_play_animation("idle")
 
 
 func stop_equipment_action() -> void:
-	if right_hand_item:
+	if is_instance_valid(right_hand_item):
 		right_hand_item.stop_action()
 
-	if left_hand_item:
+	if is_instance_valid(left_hand_item):
 		left_hand_item.stop_action()
 
 
-func _try_block_incoming_damage(attacker: Node2D = null) -> bool:
+# ==================================================
+# SHIELD DAMAGE CHECK
+# ==================================================
+
+func _try_block_incoming_damage(
+	attacker: Node2D = null
+) -> bool:
 	if not is_blocking or not is_instance_valid(left_hand_item):
 		return false
 
 	if not left_hand_item.has_method("try_block_melee_attack"):
 		return false
 
-	# The shield script checks its active state and protected direction.
 	var blocked := bool(
-		left_hand_item.call("try_block_melee_attack", attacker)
+		left_hand_item.call(
+			"try_block_melee_attack",
+			attacker
+		)
 	)
+
 	if not blocked:
 		return false
 
-	# Notify the attacker immediately so its active hitbox/attack is cancelled
-	# and it recoils. This is idempotent on the SpearEnemy side.
-	if is_instance_valid(attacker) and attacker.has_method("on_blocked_by_shield"):
-		attacker.call("on_blocked_by_shield", left_hand_item)
+	if (
+		is_instance_valid(attacker)
+		and attacker.has_method("on_blocked_by_shield")
+	):
+		attacker.call(
+			"on_blocked_by_shield",
+			left_hand_item
+		)
 
 	return true
 
+
+# ==================================================
+# DAMAGE
+# ==================================================
 
 func take_damage(
 	amount: int,
@@ -356,14 +870,9 @@ func take_damage(
 	bypass_invulnerability: bool = false,
 	apply_hit_knockback: bool = true
 ) -> bool:
-	# Returning true means this hit actually reduced player health.
-	# Optional arguments preserve compatibility with enemies that call
-	# take_damage(amount) or take_damage(amount, attacker).
 	if is_dead or amount <= 0:
 		return false
 
-	# Always check the shield before invulnerability. This ensures a blocked
-	# hit never reduces health, including the Dual Axe multi-hit spin.
 	if _try_block_incoming_damage(attacker):
 		return false
 
@@ -391,9 +900,6 @@ func take_damage(
 	if apply_hit_knockback:
 		_apply_knockback(attacker)
 
-	# The Dual Axe spin bypasses existing invulnerability for its individual
-	# timed hits, but must not restart the ordinary invulnerability timer.
-	# All other enemies keep the original invulnerability behavior.
 	if not bypass_invulnerability:
 		_start_invulnerability()
 
@@ -404,12 +910,10 @@ func _apply_knockback(attacker: Node2D = null) -> void:
 	var knockback_direction: Vector2
 
 	if is_instance_valid(attacker):
-		# Push the player away from the attacker.
 		knockback_direction = (
 			global_position - attacker.global_position
 		).normalized()
 	else:
-		# Fallback when no attacker reference is provided.
 		knockback_direction = -facing_direction
 
 	if knockback_direction.length_squared() < 0.001:
@@ -418,6 +922,10 @@ func _apply_knockback(attacker: Node2D = null) -> void:
 	knockback_velocity = knockback_direction * knockback_force
 	knockback_timer = maxf(knockback_duration, 0.0)
 
+
+# ==================================================
+# DAMAGE FLASH
+# ==================================================
 
 func _play_damage_flash() -> void:
 	var shader_material := body_sprite.material as ShaderMaterial
@@ -430,14 +938,14 @@ func _play_damage_flash() -> void:
 
 	damage_tween = create_tween()
 
-	var single_flash_duration := (
+	var single_flash_duration: float = (
 		damage_flash_duration
 		/ float(maxi(damage_flash_count * 2, 1))
 	)
 
 	shader_material.set_shader_parameter("damage_flash", 0.0)
 
-	for i in range(damage_flash_count):
+	for _index in range(damage_flash_count):
 		damage_tween.tween_method(
 			_set_damage_flash,
 			0.0,
@@ -465,25 +973,43 @@ func _set_damage_flash(value: float) -> void:
 		shader_material.set_shader_parameter("damage_flash", value)
 
 
+# ==================================================
+# INVULNERABILITY
+# ==================================================
+
 func _start_invulnerability() -> void:
 	is_invulnerable = true
 
-	await get_tree().create_timer(invulnerability_duration).timeout
+	await get_tree().create_timer(
+		invulnerability_duration
+	).timeout
 
 	if is_inside_tree() and not is_dead:
 		is_invulnerable = false
 
+
+# ==================================================
+# DEATH
+# ==================================================
 
 func _die() -> void:
 	if is_dead:
 		return
 
 	is_dead = true
+
+	_combo_run_id += 1
+	combo_active = false
+	combo_window_open = false
+	combo_input_queued = false
+	_clear_aim_lock()
+
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
 	knockback_timer = 0.0
 
 	stop_equipment_action()
+
 	is_blocking = false
 	is_invulnerable = true
 
@@ -514,15 +1040,23 @@ func _die() -> void:
 
 	get_tree().call_deferred(
 		"change_scene_to_file",
-		"res://scenes/main_menu.tscn"
+        "res://scenes/main_menu.tscn"
 	)
 
+
+# ==================================================
+# HEALING
+# ==================================================
 
 func heal(amount: int) -> void:
 	if is_dead or amount <= 0:
 		return
 
-	current_health = mini(current_health + amount, max_health)
+	current_health = mini(
+		current_health + amount,
+		max_health
+	)
+
 	health_changed.emit(current_health, max_health)
 
 	print(
@@ -533,33 +1067,56 @@ func heal(amount: int) -> void:
 	)
 
 
+# ==================================================
+# ATTACK STATE
+# ==================================================
+
 func _is_attacking() -> bool:
-	# Keep the body and hands in the attack pose until their animation ends.
+	if combo_active:
+		return true
+
+	var attack_names: Array[StringName] = [
+		&"attack",
+		&"attack_2",
+		&"attack_3"
+	]
+
 	if (
-		animation_player.current_animation == "attack"
+		attack_names.has(animation_player.current_animation)
 		and animation_player.is_playing()
 	):
 		return true
 
-	if right_hand_item == null:
+	if not is_instance_valid(right_hand_item):
 		return false
 
-	var item_animation_player := (
-		right_hand_item.get_node_or_null("AnimationPlayer")
-		as AnimationPlayer
-	)
+	var sword_player := _get_item_animation_player(right_hand_item)
+
+	if sword_player == null:
+		return false
 
 	return (
-		item_animation_player != null
-		and item_animation_player.current_animation == "attack"
-		and item_animation_player.is_playing()
+		attack_names.has(sword_player.current_animation)
+		and sword_player.is_playing()
 	)
 
 
+# ==================================================
+# ANIMATION HELPER
+# ==================================================
+
 func _play_animation(animation_name: String) -> void:
-	if animation_player.has_animation(animation_name):
-		if animation_player.current_animation != animation_name:
-			animation_player.play(animation_name)
+	if not is_instance_valid(animation_player):
+		return
+
+	if combo_active:
+		return
+
+	if not animation_player.has_animation(animation_name):
+		return
+
+	if animation_player.current_animation != animation_name:
+		animation_player.play(animation_name)
 
 
 func get_facing_direction() -> Vector2:
