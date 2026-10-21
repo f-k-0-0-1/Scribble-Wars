@@ -252,6 +252,7 @@ _data = {
 [node name="DualAxeEnemy" type="CharacterBody2D" unique_id=1699474106]
 script = ExtResource("1_hvtue")
 rotation_offset_degrees = 90.0
+attack_damage = 25
 attack_active_time = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1801419904]

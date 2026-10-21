@@ -1,12 +1,19 @@
 [gd_scene format=3 uid="uid://cwg4tmc7lc6xq"]
 
 [ext_resource type="Texture2D" uid="uid://yrwob4oxis7u" path="res://assets/PNG/Double (128px)/Characters/green_character.png" id="1_3vyb7"]
-[ext_resource type="Script" uid="uid://b8jwtpcausknv" path="res://scripts/player.gd" id="1_g2els"]
+[ext_resource type="Script" uid="uid://otvl4suk8g12" path="res://scripts/states/player.gd" id="1_f1ej7"]
 [ext_resource type="PackedScene" uid="uid://budyx3yqw725k" path="res://scenes/Sword.tscn" id="2_qlg0r"]
 [ext_resource type="PackedScene" path="res://scenes/Shield.tscn" id="3_tuyoq"]
 [ext_resource type="Shader" uid="uid://drtyxouyadjbs" path="res://resources/player_damage.gdshader" id="4_tuyoq"]
 [ext_resource type="Texture2D" uid="uid://up4tskoogxub" path="res://assets/PNG/Double (128px)/Characters/green_hand.png" id="5_qlg0r"]
 [ext_resource type="Animation" path="res://resources/animations/player/attack.tres" id="6_fjrip"]
+[ext_resource type="Script" uid="uid://bf8kcb2mrv5wr" path="res://scripts/states/state_machine.gd" id="8_oprun"]
+[ext_resource type="Script" uid="uid://bepsu3ah5dhn" path="res://scripts/states/idle_state.gd" id="9_a8ls1"]
+[ext_resource type="Script" uid="uid://dtg7pdt73act7" path="res://scripts/states/move_state.gd" id="10_qfm1y"]
+[ext_resource type="Script" uid="uid://ljcb050x7wuw" path="res://scripts/states/attack_state.gd" id="11_fulsm"]
+[ext_resource type="Script" uid="uid://c8debxfjnpk21" path="res://scripts/states/block_state.gd" id="12_4r5pv"]
+[ext_resource type="Script" uid="uid://6o0wm8gy64bd" path="res://scripts/states/hurt_state.gd" id="13_60mlk"]
+[ext_resource type="Script" uid="uid://b6fugr07sc1ju" path="res://scripts/states/dead_state.gd" id="14_i4ail"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_g2els"]
 radius = 38.0
@@ -278,7 +285,7 @@ radius = 47.042534
 radius = 37.215588
 
 [node name="Player" type="CharacterBody2D" unique_id=1406513582 groups=["player"]]
-script = ExtResource("1_g2els")
+script = ExtResource("1_f1ej7")
 starting_right_hand_item = ExtResource("2_qlg0r")
 starting_left_hand_item = ExtResource("3_tuyoq")
 
@@ -339,3 +346,24 @@ shape = SubResource("CircleShape2D_smehm")
 
 [node name="AudioListener2D" type="AudioListener2D" parent="." unique_id=412519425]
 current = true
+
+[node name="StateMachine" type="Node" parent="." unique_id=1104885126]
+script = ExtResource("8_oprun")
+
+[node name="Idle" type="Node" parent="StateMachine" unique_id=126096607]
+script = ExtResource("9_a8ls1")
+
+[node name="Move" type="Node" parent="StateMachine" unique_id=1670862221]
+script = ExtResource("10_qfm1y")
+
+[node name="Attack" type="Node" parent="StateMachine" unique_id=1767419154]
+script = ExtResource("11_fulsm")
+
+[node name="Block" type="Node" parent="StateMachine" unique_id=1468040126]
+script = ExtResource("12_4r5pv")
+
+[node name="Hurt" type="Node" parent="StateMachine" unique_id=1792066583]
+script = ExtResource("13_60mlk")
+
+[node name="Dead" type="Node" parent="StateMachine" unique_id=1785406460]
+script = ExtResource("14_i4ail")
