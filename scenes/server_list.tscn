@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://b056hgmakf475"]
+
+[ext_resource type="Script" uid="uid://cedb3h03u5a67" path="res://scripts/server_list.gd" id="1_m5ps6"]
+[ext_resource type="Texture2D" uid="uid://ds5qngklq0nrr" path="res://assets/PNG/Minimal Off-White Graph Paper.png" id="1_uxco0"]
+[ext_resource type="Texture2D" uid="uid://byqhu10a3mm2l" path="res://assets/PNG/Scribble Wars Comic Logo.png" id="2_obush"]
+[ext_resource type="StyleBox" uid="uid://d2gf3jvuof77n" path="res://resources/button_style.tres" id="3_m5ps6"]
+[ext_resource type="FontFile" uid="uid://dods562vo6bwn" path="res://fonts/EightBitDragon-anqx.ttf" id="4_obush"]
+
+[node name="ServerList" type="Control" unique_id=596132662]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_m5ps6")
+
+[node name="BG" type="TextureRect" parent="." unique_id=788720673]
+modulate = Color(0.8104176, 0.81041765, 0.81041765, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_uxco0")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=858475708]
+custom_maximum_size = Vector2(200, 100)
+layout_mode = 1
+offset_right = 500.0
+offset_bottom = 250.0
+texture = ExtResource("2_obush")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=222314110]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -450.0
+offset_top = -140.0
+offset_right = 450.0
+offset_bottom = 277.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Button" type="Button" parent="VBoxContainer" unique_id=1208211159]
+custom_minimum_size = Vector2(900, 55)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14646962, 0.1464692, 0.14646932, 1)
+theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = ExtResource("3_m5ps6")
+theme_override_styles/pressed = ExtResource("3_m5ps6")
+theme_override_styles/hover = ExtResource("3_m5ps6")
+theme_override_styles/focus = ExtResource("3_m5ps6")
+text = "server 1"
+
+[node name="Button3" type="Button" parent="VBoxContainer" unique_id=1648986471]
+custom_minimum_size = Vector2(900, 55)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14646962, 0.1464692, 0.14646932, 1)
+theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = ExtResource("3_m5ps6")
+theme_override_styles/pressed = ExtResource("3_m5ps6")
+theme_override_styles/hover = ExtResource("3_m5ps6")
+theme_override_styles/focus = ExtResource("3_m5ps6")
+text = "server 2
+"
+
+[node name="Button2" type="Button" parent="VBoxContainer" unique_id=1608361991]
+custom_minimum_size = Vector2(900, 55)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14646962, 0.1464692, 0.14646932, 1)
+theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = ExtResource("3_m5ps6")
+theme_override_styles/pressed = ExtResource("3_m5ps6")
+theme_override_styles/hover = ExtResource("3_m5ps6")
+theme_override_styles/focus = ExtResource("3_m5ps6")
+text = "server 3"
+
+[node name="BackButton" type="Button" parent="VBoxContainer" unique_id=1336329843]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+theme_override_colors/font_color = Color(0.14646962, 0.1464692, 0.14646932, 1)
+theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = ExtResource("3_m5ps6")
+theme_override_styles/pressed = ExtResource("3_m5ps6")
+theme_override_styles/hover = ExtResource("3_m5ps6")
+theme_override_styles/focus = ExtResource("3_m5ps6")
+text = " BACK "
+
+[node name="Label" type="Label" parent="." unique_id=632624352]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -166.5
+offset_top = 69.0
+offset_right = 166.5
+offset_bottom = 105.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.28118682, 0.28118688, 0.28118682, 1)
+theme_override_fonts/font = ExtResource("4_obush")
+theme_override_font_sizes/font_size = 35
+text = "Browse Servers"
+
+[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

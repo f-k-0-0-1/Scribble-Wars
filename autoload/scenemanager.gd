@@ -6,6 +6,7 @@ signal scene_changed(scene_path: String)
 const MAIN_MENU_PATH: String = "res://scenes/main_menu.tscn"
 const LOADING_SCREEN_PATH: String = "res://scenes/loading_screen.tscn"
 const FIRST_DUNGEON_PATH: String = "res://scenes/dungeon_01.tscn"
+const SERVER_LIST_PATH: String = "res://scenes/server_list.tscn"
 
 var target_level_path: String = ""
 var is_transitioning: bool = false
@@ -18,6 +19,8 @@ func go_to_menu() -> void:
 func start_new_game() -> void:
 	change_scene(FIRST_DUNGEON_PATH)
 
+func go_to_server_list() -> void:
+	change_scene(SERVER_LIST_PATH)
 
 func change_scene(scene_path: String) -> void:
 	if is_transitioning:
