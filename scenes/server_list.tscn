@@ -111,5 +111,3 @@ theme_override_colors/font_color = Color(0.28118682, 0.28118688, 0.28118682, 1)
 theme_override_fonts/font = ExtResource("4_obush")
 theme_override_font_sizes/font_size = 35
 text = "Browse Servers"
-
-[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

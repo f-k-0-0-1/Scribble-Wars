@@ -1,29 +1,41 @@
-
 extends Control
 
-@onready var play_button: Button = $VBoxContainer/Button
-@onready var server_button: Button = $VBoxContainer/Button3
+@onready var offline_button: Button = $VBoxContainer/Button
+@onready var online_button: Button = $VBoxContainer/OnlineButton
 @onready var quit_button: Button = $VBoxContainer/Button2
 
 
 func _ready() -> void:
-	play_button.pressed.connect(_on_play_pressed)
+	offline_button.text = "OFFLINE PLAY"
+	online_button.text = "ONLINE MULTIPLAYER"
+	quit_button.text = "QUIT"
+
+	offline_button.pressed.connect(_on_offline_pressed)
+	online_button.pressed.connect(_on_online_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
-	server_button.pressed.connect(_on_server_pressed)
-
-	play_button.grab_focus()
+	offline_button.grab_focus()
 
 
-func _on_play_pressed() -> void:
-	play_button.disabled = true
-	quit_button.disabled = true
+func _on_offline_pressed() -> void:
+	_set_buttons_disabled(true)
 	AudioManager.play_button_click()
+	NetworkClient.disconnect_from_server()
 	SceneManager.start_new_game()
 
-func _on_server_pressed() -> void:
+
+func _on_online_pressed() -> void:
+	_set_buttons_disabled(true)
 	AudioManager.play_button_click()
-	SceneManager.go_to_server_list()
+	NetworkClient.disconnect_from_server()
+	SceneManager.change_scene("res://scenes/server_list.tscn")
+
 
 func _on_quit_pressed() -> void:
 	AudioManager.play_button_click()
 	get_tree().quit()
+
+
+func _set_buttons_disabled(value: bool) -> void:
+	offline_button.disabled = value
+	online_button.disabled = value
+	quit_button.disabled = value

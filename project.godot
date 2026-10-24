@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 
 SceneManager="*uid://bd64dt7j5yi8c"
 AudioManager="*uid://cut4tq6d4nhwo"
+NetworkClient="*uid://b71y6ujq1rd48"
 
 [display]
 

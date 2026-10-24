@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://1sfwo0jhkki0"]
+
+[ext_resource type="Texture2D" uid="uid://yrwob4oxis7u" path="res://assets/PNG/Double (128px)/Characters/green_character.png" id="1_body"]
+[ext_resource type="Script" uid="uid://brmbks2m3etoc" path="res://scripts/remote_player.gd" id="2_script"]
+
+[node name="RemotePlayer" type="Node2D" unique_id=611776093]
+script = ExtResource("2_script")
+
+[node name="BodySprite" type="Sprite2D" parent="." unique_id=213777442]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_body")
+
+[node name="NameLabel" type="Label" parent="." unique_id=1386204655]
+offset_left = -48.0
+offset_top = -72.0
+offset_right = 48.0
+offset_bottom = -48.0
+theme_override_colors/font_color = Color(0.12, 0.12, 0.12, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "Player"
+horizontal_alignment = 1
+vertical_alignment = 1

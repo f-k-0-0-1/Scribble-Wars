@@ -10,10 +10,16 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("back"):
-		SceneManager.go_to_menu()
+		_return_to_menu()
 
 
 func _on_back_button_pressed() -> void:
+	_return_to_menu()
+
+
+func _return_to_menu() -> void:
+	if NetworkClient.is_connected_to_server():
+		NetworkClient.disconnect_from_server()
 	AudioManager.play_button_click()
 	SceneManager.go_to_menu()
 
