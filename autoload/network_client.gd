@@ -17,7 +17,8 @@ const MAIN_MENU_SCENE_PATH := "res://scenes/main_menu.tscn"
 const REMOTE_PLAYER_SCENE: PackedScene = preload("res://scenes/remote_player.tscn")
 
 const HEARTBEAT_INTERVAL: float = 5.0
-const POSITION_SEND_INTERVAL: float = 0.05
+const POSITION_SEND_INTERVAL: float = 1.0 / 30.0
+const SERVER_SNAPSHOT_INTERVAL: float = 1.0 / 30.0
 const CONNECT_TIMEOUT: float = 15.0
 const JOIN_RETRY_INTERVAL: float = 2.0
 
@@ -42,6 +43,8 @@ var _hit_flash_sequence: int = 0
 var _tracked_local_player: Node = null
 var _last_local_health: int = -1
 var _last_server_state_sequence: int = -1
+var _server_tick_origin_sequence: int = -1
+var _server_tick_origin_local_time: float = 0.0
 
 
 func connect_to_server(host: String, port: int) -> Error:
@@ -68,6 +71,8 @@ func connect_to_server(host: String, port: int) -> Error:
 	_latest_remote_states.clear()
 	_hit_flash_sequence = 0
 	_last_server_state_sequence = -1
+	_server_tick_origin_sequence = -1
+	_server_tick_origin_local_time = 0.0
 	_untrack_local_player()
 
 	_send_packet("JOIN")
@@ -135,7 +140,8 @@ func _process(delta: float) -> void:
 
 		_position_elapsed += delta
 		if _position_elapsed >= POSITION_SEND_INTERVAL:
-			_position_elapsed = 0.0
+			# Keep the cadence stable without sending catch-up bursts after a slow frame.
+			_position_elapsed = fmod(_position_elapsed, POSITION_SEND_INTERVAL)
 			_send_local_state_if_in_game()
 			_sync_remote_players()
 
@@ -182,6 +188,8 @@ func _handle_server_message(message: String) -> void:
 		_connect_elapsed = 0.0
 		_join_retry_elapsed = 0.0
 		_last_server_state_sequence = -1
+		_server_tick_origin_sequence = -1
+		_server_tick_origin_local_time = 0.0
 		_send_packet("JOIN")
 
 	elif message == "SERVER FULL":
@@ -210,6 +218,16 @@ func _parse_state(payload: String) -> void:
 		return
 
 	_last_server_state_sequence = state_sequence
+	var local_receive_time: float = _now_seconds()
+	if _server_tick_origin_sequence < 0:
+		_server_tick_origin_sequence = state_sequence
+		_server_tick_origin_local_time = local_receive_time
+	# The server now emits exactly one sequence increment per fixed 30 Hz tick.
+	# Project that tick onto this client's monotonic clock so dropped/bunched UDP
+	# arrivals do not redefine the spacing between snapshots.
+	var estimated_snapshot_time: float = _server_tick_origin_local_time + float(
+		state_sequence - _server_tick_origin_sequence
+	) * SERVER_SNAPSHOT_INTERVAL
 	var entries_payload: String = payload.substr(header_end + 1)
 	var updated: Dictionary = {}
 
@@ -226,6 +244,7 @@ func _parse_state(payload: String) -> void:
 
 		var state: Dictionary = {
 			"position": Vector2(float(fields[1]), float(fields[2])),
+			"snapshot_time": estimated_snapshot_time,
 			"facing": Vector2.DOWN,
 			"body_animation": "idle",
 			"body_time": 0.0,
@@ -442,6 +461,10 @@ func _sync_remote_players() -> void:
 		if is_instance_valid(remote_node) and not remote_node.is_queued_for_deletion():
 			if remote_node.has_method("set_network_snapshot"):
 				remote_node.call("set_network_snapshot", state)
+
+
+func _now_seconds() -> float:
+	return float(Time.get_ticks_usec()) / 1000000.0
 
 
 func _send_packet(message: String) -> void:

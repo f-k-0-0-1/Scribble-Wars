@@ -10,8 +10,8 @@ const REMOTE_EQUIPMENT_SCRIPT: Script = preload(
 	"res://scripts/remote_equipment_visual.gd"
 )
 
-@export var interpolation_delay: float = 0.12
-@export var max_extrapolation_time: float = 0.08
+@export var interpolation_delay: float = 0.14
+@export var max_extrapolation_time: float = 0.05
 @export var max_extrapolation_speed: float = 1200.0
 @export var facing_rotation_speed: float = 20.0
 @export var damage_flash_duration: float = 0.5
@@ -54,6 +54,9 @@ var shield_animation_player: AnimationPlayer = null
 
 
 func _ready() -> void:
+	# Position is interpolated manually in _process(); avoid a second transform
+	# interpolation pass if Godot's global physics interpolation is enabled.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	# Apply orientation after AnimationPlayer modifies hand transforms.
 	process_priority = 100
 	_setup_damage_flash_material()
@@ -68,13 +71,10 @@ func configure(id: int) -> void:
 	if is_instance_valid(name_label):
 		name_label.text = "Player %d" % player_id
 	target_position = global_position
-	has_target = true
+	has_target = false
 	_position_snapshots.clear()
-	_position_snapshots.append({
-		"time": _now_seconds(),
-		"position": global_position
-	})
-	_position_initialized = true
+	# The first real server snapshot initializes position and timeline.
+	_position_initialized = false
 
 
 func set_target_position(value: Vector2) -> void:
@@ -102,8 +102,9 @@ func set_network_state(position: Vector2, facing: Vector2, animation: String) ->
 
 func set_network_snapshot(state: Dictionary) -> void:
 	var position_value: Variant = state.get("position", global_position)
+	var snapshot_time: float = float(state.get("snapshot_time", _now_seconds()))
 	if position_value is Vector2:
-		_record_position_snapshot(position_value)
+		_record_position_snapshot(position_value, snapshot_time)
 
 	var hit_sequence: int = int(state.get("hit_flash_seq", 0))
 	if _last_hit_flash_sequence < 0:
@@ -162,8 +163,10 @@ func _now_seconds() -> float:
 	return float(Time.get_ticks_usec()) / 1000000.0
 
 
-func _record_position_snapshot(value: Vector2) -> void:
-	var snapshot_time: float = _now_seconds()
+func _record_position_snapshot(value: Vector2, source_time: float = -1.0) -> void:
+	# source_time is estimated from the server's fixed snapshot tick. Do not
+	# timestamp every packet at local receipt time: packets can arrive in bursts.
+	var snapshot_time: float = source_time if source_time >= 0.0 else _now_seconds()
 
 	if _position_snapshots.size() > 0:
 		var last_time: float = float(_position_snapshots[-1]["time"])

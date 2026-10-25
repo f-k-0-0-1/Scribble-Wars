@@ -1,8 +1,8 @@
 extends Control
 
 const TEST_SERVER_NAME := "Scribble Wars Test Server"
-const TEST_SERVER_IP := "147.185.221.212"
-const TEST_SERVER_PORT := 17253
+const TEST_SERVER_IP := "147.185.221.218"
+const TEST_SERVER_PORT := 29983
 
 @onready var server_1: Button = $VBoxContainer/Button
 @onready var server_2: Button = $VBoxContainer/Button3
